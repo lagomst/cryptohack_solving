@@ -1,0 +1,1 @@
+{"ciphertext": "c92b7734070205bdf6c0087a751466ec13ae15e6f1bcdd3f3a535ec0f4bbae66", "index": 23, "word": "Abbas", "plaintext": "22256e99daea02ab3b0020330df3f4d234ef3880c7d7f13fc1f80df3b67c8a34"}
