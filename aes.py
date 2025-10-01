@@ -390,17 +390,77 @@ def get_cookie_until_paddable_iv():
                 raise e
     return iv, p_admin, p_date
 
+def flipping_cookie():
+    # notation: admin: admin block = "admin=False;expi", date: date block, iv: iv block
+    
+    cookie = get_cookie()
+    iv_hex, admin_hex, date_hex = split_string(cookie, 32) # get_cookie return IV + cipher_admin + cipher_date
+    
+    # Generalize the problem:
+    # get_cookie(): return IV + cipher_admin + cipher_date
+    # decrypt_cbc_cipher_iv(cipher, IV): calculate P = D(cipher) ^ IV, then check if P is padded and has "admin=True", return flag or error
+    
+    # E(admin ^ iv) = cipher_admin
+    # => admin ^ iv = D(cipher_admin) (1)
+    # Let text be any 16-bytes padded arbitary plaintext
+    # From (1) => admin ^ iv ^ text = D(cipher_admin) ^ text
+    # => D(cipher_admin) ^ admin ^ iv ^ text = text
+    # equivalent to: decrypt_cbc_cipher_iv(cipher_admin, admin ^ iv ^ text) = text, then check text
+    
+    # so one can set the text to be "admin=True..." and exploit the result
+    
+    # We only need forged_p="admin=True" for condition to be true
+    # However doing so will raise padding error,
+    # so we fool the algorithm by also padding the forged_p
+    p_admin = "admin=False;expi".encode() # already 16 bytes
+    p_forged = pad("admin=True".encode(), 16)
+    
+    forged_iv = xor_two_bytes(p_admin, bytes.fromhex(iv_hex))
+    forged_iv = xor_two_bytes(forged_iv, p_forged)
+    
+    content = decrypt_cbc_cipher_iv(admin_hex, forged_iv.hex())
+    
+    return content
+
+def send_get_request(url):
+    response = requests.get(url)
+    content = json.loads(response.content.decode())
+    return content
+
+def symmetry():
+    def encrypt_flag():
+        url = BASE_URL + '/symmetry/encrypt_flag/'
+        content = send_get_request(url)
+        return content.get("ciphertext")
+    
+    def encrypt(plaintext_hex:str, iv_hex:str):
+        url = BASE_URL + f'/symmetry/encrypt/{plaintext_hex}/{iv_hex}/'
+        content = send_get_request(url)
+        return content.get("ciphertext")
+    
+    hexes = encrypt_flag()
+    iv_hex = hexes[:32] # iv length is 16 bytes = 32 hex
+    cipher_hexes = hexes[32:]
+    print(f"{iv_hex=} {cipher_hexes=}")
+    
+    # In ofb: cipher_i = E^i(iv) + plain_i; E^i means applying encryption function i times
+    # => E^i(iv) = cipher_i + plain_i
+    # set plain_i to 0, we can get raw E^i(iv)
+    # from here, we calculate plain_i = cipher_i ^ E^i(iv)
+    p_zero = bytes(len(cipher_hexes))
+    
+    encryption_iterate = encrypt(p_zero.hex(), iv_hex)
+    
+    plaintext = xor_two_bytes(bytes.fromhex(cipher_hexes), bytes.fromhex(encryption_iterate))
+    return plaintext
+        
 def main():
     # ciphertext = get_encrypted_flag()
     # print(ciphertext)
     # return decrypt_brute_force(ciphertext)
     # cookie = '3889f5aaf7ec3d9f73df093cc4ab4ccace03a3641b511dfd725ba3c496ed172279d27b91769e4a9995b9be0552f2855f'
-    iv = '43ab18d44d7abef2a69651e738717901' # ry=17593000__
-    ciphertext = ['4ed705b8636f67bd6f2100b91c7bd770', 'ae2f6c72e8ccced009f5e361d4db3193']
-    approx_time = 1759307932
-    # return split_string(cookie, 32)
-    return guess_date_last_two_digits(ciphertext[0], ciphertext[1], iv, 3)
     
+    return symmetry()
 
 if __name__ == "__main__":
     print(main())
