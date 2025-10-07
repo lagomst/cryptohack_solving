@@ -453,14 +453,79 @@ def symmetry():
     
     plaintext = xor_two_bytes(bytes.fromhex(cipher_hexes), bytes.fromhex(encryption_iterate))
     return plaintext
-        
+
+def bean_counter(rand_int=int.from_bytes( os.urandom(1))):
+    # Look closely at the counter code,
+    # if stup = False then counter doesn't decrement or increment => value unchanged.
+    # In encryption code, ctr = StepUpCounter() means ctr.stup = False
+    # => c_i = E(val) ^ p_i (ecb) for every i
+    # => c_i ^ c_(i+1) = p_i ^ p_(i+1)
+    # This is true for every value of "val" (try it yourself!)
+    
+    url = BASE_URL + '/bean_counter/encrypt/'
+    content = send_get_request(url)
+    data_hex: str = content.get("encrypted")
+    random = xor_two_bytes(bytes.fromhex(data_hex[32:64]), bytes.fromhex(data_hex[32*rand_int:64*rand_int]))
+    print(int.from_bytes(random))
+    # Now go read png chunk layout! (https://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html)
+    # Also IHDR chunk layout (https://www.libpng.org/pub/png/spec/1.2/PNG-Chunks.html)
+    # PNG starts with 8 bytes of signature and then a header chunk (IHDR)
+    # We know what those 8 bytes are, and what 8 bytes of starting IHDR are
+    # From here we have obtained zeroth block! => obtained E(val)
+    # The rest shouldn't be difficult
+    png_signature = bytes([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+    ihdr_length = bytes([0x00, 0x00, 0x00, 0x0d]) # 13 bytes long
+    ihdr_type = bytes([0x49, 0x48, 0x44, 0x52]) # type(IHDR)
+    
+    p_zero = png_signature + ihdr_length + ihdr_type
+    print(p_zero.hex())
+    encrypted_value = xor_two_bytes(bytes.fromhex(data_hex[:32]), p_zero)
+    # step = BLOCK_SIZE * 2
+    png_hex = ""
+    for idx in range(0, len(data_hex), 32):
+        cipher = bytes.fromhex(data_hex[idx:idx+32])
+        plain = xor_two_bytes(encrypted_value, cipher)
+        png_hex += plain.hex()
+    # write png_hex to png
+    # print(png_hex)
+    import struct
+    with open('./bean_counter.png', 'wb') as f:
+        f.write(bytes.fromhex(png_hex))
+    
+    return png_hex
+
+# def create_png(path: str):
+#     # PNG signature
+#     signature = b'\x89PNG\r\n\x1a\n'
+    
+#     # IHDR (13 bytes)
+#     width, height = 1, 1
+#     bit_depth, color_type, compression, filter_method, interlace = 8, 2, 0, 0, 0
+#     ihdr_data = struct.pack(">IIBBBBB", width, height, bit_depth, color_type, compression, filter_method, interlace)
+#     ihdr = build_chunk(b'IHDR', ihdr_data)
+    
+#     # IDAT (pixel data: one RGB pixel black = [0,0,0], with filter byte 0)
+#     raw_data = b'\x00\x00\x00\x00'   # filter byte + pixel
+#     compressed = zlib.compress(raw_data)
+#     idat = build_chunk(b'IDAT', compressed)
+    
+#     # IEND (no data)
+#     iend = build_chunk(b'IEND', b'')
+    
+#     with open(path, "wb") as f:
+#         f.write(signature + ihdr + idat + iend)
+#     print(f"Valid PNG written: {path}")
+
 def main():
     # ciphertext = get_encrypted_flag()
     # print(ciphertext)
     # return decrypt_brute_force(ciphertext)
     # cookie = '3889f5aaf7ec3d9f73df093cc4ab4ccace03a3641b511dfd725ba3c496ed172279d27b91769e4a9995b9be0552f2855f'
-    
-    return symmetry()
+    # random_number = int.from_bytes( os.urandom(1))
+    # hex_one = bean_counter(random_number)
+    # hex_two = bean_counter(random_number)
+    # zero = xor_two_bytes(bytes.fromhex(hex_one), bytes.fromhex(hex_two))
+    return bean_counter()
 
 if __name__ == "__main__":
     print(main())
