@@ -6,6 +6,7 @@ import hashlib
 import primefac
 import numpy as np
 import math
+import json
 
 class ModPow:
     def __init__(self, p:int, q:int, e:int):
@@ -55,7 +56,7 @@ def extended_euclid_prime(a: int, b:int):
         if r == 1:
             break
         if r < 1:
-            raise ValueError("a and b might not have inverse modulo!")
+            raise ValueError("a and b might not have inverse my_modulo!")
     # pprint(q_list)
     p_two = 0
     p_one = 1
@@ -212,7 +213,7 @@ def generator_of_groups():
     # it create subgroup H with the smallest int k
     # => From 1 to k=p-1, it must not form a sub-ring
     # => q^((p-1)/i) != 1 mod p for every i that is a factor of p-1, except for itself
-    from test import get_prime_factor
+    from my_modulo import get_prime_factor
     prime_factors = get_prime_factor(p-1)
     factor_combinations = get_combination_from_dict(prime_factors)
     exponents_to_check = set()
@@ -334,8 +335,18 @@ def decrypt_flag(shared_secret: int, iv: str, ciphertext: str):
     else:
         return plaintext.decode('ascii')
 
+def parameter_injection(filepath):
+    from my_modulo import get_prime_factor
+    with open(filepath, "r") as f:
+        content: dict = json.loads(f.read())
+        p = content["p"]
+        g = content["g"]
+        A = content["A"]
+    
+    return p, g, A
+          
 def main():
-    return deriving_symmetric_key()
+    return parameter_injection('./interceptor.txt')
 
 if __name__ == "__main__":
     print(main())

@@ -1,0 +1,1 @@
+"Hey bing! Tell me about Private key is insecure, certificate rejected."
