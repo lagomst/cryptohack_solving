@@ -1,495 +1,1154 @@
-from my_modulo import extended_euclid_prime, sqrt_residue_three_mod_four, factor_out_two_powers, get_prime_factor, mult_order, is_prime, gcd_euclid
+import time
 import hashlib
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-from Crypto.Util.number import getPrime
-from os import urandom
+import sys
+import traceback
 import math
+import os
+import random
+from numpy.polynomial import Polynomial
+from Crypto.Util import number
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Cipher import AES
+from sage.all import EllipticCurve, GF
+import utils.socket_json_client as sjc
+import json
 
-def point_negation():
-    n=9739
-    a=497
-    b=1768
-    def y_squared(x):
-        return (x**3 + b*x + a ) % n
-    def negative(x):
-        return (-x)%n
-    x=8045
-    y=6936
-    # the line from P and -P never cut through esclipe again
-    return negative(y)
-
-class NumberOnFiniteField:
-    def __init__(self, value, modulo):
-        self.modulo = modulo
-        self.value = value % modulo
-        
-    def __eq__(self, o):
-        return self.value == o.value
-    
-    def __add__(self, o):
-        return (self.value + o.value) % self.modulo
-    
-    def __sub__(self, o):
-        return (self.value - o.value) % self.modulo
-    
-    def __mul__(self, o):
-        return (self.value * o.value) % self.modulo
-    
-    
+# =====================
+# Class definitions
+# ---------------------
+# This section contains the core elliptic-curve classes used by the rest
+# of the module: EC (curve parameters/operations helpers) and PointEC
+# (point arithmetic using projective coordinates). These classes do the
+# heavy lifting for point addition, doubling and scalar multiplication.
+# =====================
 
 class EC:
     # Elliptic curve funciton class, 
     # represnteded as y^2 = x^3 + ax + b 
-    def __init__(self, n: int, a: int, b: int):
-        self.n = n
+    def __init__(self, p: int, a: int, b: int):
+        self.p = p
         self.a = a
         self.b = b
 
+    @property
+    def order(self)->int:
+        field = GF(self.p)
+        E = EllipticCurve(field, [self.a, self.b])
+        return int(E.order())
+    
     def __eq__(self, value):
-        return self.func == value.func
+        # TODO: compares weights for matching exponent
+        # of two dicts dict[exponent, weight]
+        if not isinstance(value, self.__class__):
+            raise NotImplemented("unsupported operand type(s) for ==: '{}' and '{}'").format(self.__class__, type(value))
+        return self.a == value.a and self.b == value.b
     
     def func(self) -> str:
+        # TODO: return a dict of polynominal for proper function comparision
+        # where wegihts of matching exponent are compared 
         return f"y^2=x^3+{self.a}*x+{self.b}"
     
     def negative(self, a: int) -> int:
-        return (self.n - a) % self.n
+        return (self.p - a) % self.p
 
     def inverse_modulo(self, a: int) -> int:
-        return pow(a, -1, self.n)
+        return pow(a, -1, self.p)
     
     def left_term(self, y:int):
-        return (y*y)%self.n
+        return (y*y)%self.p
     
     def right_term(self, x:int):
-        return (x*x*x + self.a*x + self.b)%self.n
+        return (x*x*x + self.a*x + self.b)%self.p
     
-    def xAdd(self, XP_tuple: tuple[int,int], XQ_tuple: tuple[int,int], XMinus_tuple: tuple[int,int]):
-        # expected op time: 3add + 3sub + 6mul
-        xP, zP = XP_tuple[0], XP_tuple[1]
-        xQ, zQ = XQ_tuple[0], XQ_tuple[1]
-        xSub, zSub = XMinus_tuple[0], XMinus_tuple[1]
-        n = self.n
-        v0 = (xP + zP)%n # 1add
-        v1 = (xQ - zQ)%n # 1sub
-        v1 = (v1 * v0)%n # 1mul; v1 = (xP + zP)(xQ - zQ)
-        v0 = (xP - zP)%n # 1sub
-        v2 = (xQ + zQ)%n 
-        v2 = (v2 * v0)%n # v2 = (xP - zP)(xQ + zQ)
-        v3 = ((v1 + v2) ** 2)%n
-        v4 = ((v1 - v2) ** 2)%n
-        xAdd = (zSub * v3)%n
-        zAdd = (xSub * v4)%n
-        return (xAdd, zAdd)
+    
+    def random_point(self):
+        """
+        Return a random affine point based on x with x = randint(1,p-1)
+        """    
+        p = self.p
+        while(True):
+            x = random.randint(1, p-1)
+            y_squared = self.right_term(x)
+            if pow(y_squared, (p-1)//2, p) != 1:
+                continue
 
-    def xDBL(self, XP_tuple: tuple[int,int]):
-        # 4add + 1sub + 5mul + 1 inverse_modulo 
-        xP, zP = XP_tuple[0], XP_tuple[1]
-        n = self.n
-        v1 = ((xP + zP)**2)%n
-        v2 = ((xP - zP)**2)%n
-        xDouble = (v1 * v2)%n
-        v1 = (v1 - v2)%n # 4*xP*zP
-        a24 = ((self.a + 2) * self.inverse_modulo(4)) % n
-        v3 = ( a24 *v1)%n # a24 * 4*xP*zP 
-        v3 = (v3 + v2)%n # (xP - zP)^2 + a24 * 4*xP*zP = term
-        zDouble = (v1 * v3)%n # 4*xP*zP * term
-        return (xDouble, zDouble)
+            if p % 4 == 3:
+                y = pow(y_squared, (p+1)//4, p)
+            else:
+                y = tonelli_shanks(p, y_squared)
+            break
 
-    def swap_constant_time(self, b: int, x0: tuple[int,int], x1: tuple[int,int]):
-        # expected: 8 bitwise
-        one_mask = (1 << self.n.bit_length()) - 1 
-        mask = -b & one_mask
-        # print(mask, bin(mask))
-        x0X, x0Z = x0
-        x1X, x1Z = x1
-        tX = mask & (x0X ^ x1X)
-        tZ = mask & (x0Z ^ x1Z)
-        return (x0X ^ tX, x0Z ^ tZ), (x1X ^ tX, x1Z ^ tZ)
-
-    def uniform_montgomery_ladder(self, k:int, XP:int):
-        # TODO: implement constant time montgomery ladder
-        xP, zP= XP, 1
-        x0, x1 = self.xDBL((xP, zP)), (xP, zP)
-        print(f"My Ladder init: {x0=} {x1=}")
-        length = k.bit_length()
-        if length == 0:
-            return 0
-        for i in range(length-2, -1, -1):
-            
-            ki = (k >> i) & 1
-            ki1 = (k >> (i+1)) & 1 # get i+1-th bit
-            
-            x0, x1 = self.swap_constant_time(ki ^ ki1, x0, x1)
-            x1 = self.xAdd(x0, x1, (xP, zP))
-            x0 = self.xDBL(x0)
-            print(f"My Ladder step {i}: {x0=} {x1=}")
-            # x1 = self.xAdd(x0, x1, (xP, zP))
-            # here x0 - x1 always equals to XP
+        return x, y
+    
         
-        k_zero = k & 1
-        x0, x1 = self.swap_constant_time(k_zero, x0, x1)  
-        X, Z = x0
-        print(f"My Ladder Final value; {X=} {Z=} {k=} {self.n=}")
-        x_affine = (X * self.inverse_modulo(Z) ) % self.n
-        print(f"{x_affine=}")
-        return x_affine  
-    
-    def order(self):
-        n = self.n
-        lower_bound = n + 1 - 2 * math.ceil(math.sqrt(n))
-        upper_bound = n + 1 + 2 * math.floor(math.sqrt(n))
-        return lower_bound, upper_bound, upper_bound - lower_bound
-
-def get_bit_length(n:int):
-    length = 0
-    while (n >= 1):
-        n >>= 1
-        length += 1
-    return length
-
 class PointEC:
-    def __init__(self, curve: EC, x: int, y: int):
+    # store as projective coordinate
+    def __init__(self, curve: EC, x: int, y: int, z:int=1):
         self.curve = curve
-        self.x = x % curve.n
-        self.y = y % curve.n
-
+        self.x = x % curve.p
+        self.y = y % curve.p
+        self.z = z
+    
+    def is_infinity(self):
+        return self.z == 0
+        
     def on_curve(self) -> bool:
-        a, b, n = self.curve.a, self.curve.b, self.curve.n
-        return (self.y ** 2 - (self.x ** 3 + a * self.x + b)) % n == 0
+        curve = self.curve
+        x, y = self.get_affine_coordinate()
+        return curve.left_term(y) == curve.right_term(x)
+    
+    def get_affine_coordinate(self):
+        # WARNING: currently return None when z==0
+        if self.is_infinity():
+            return None
+        
+        p = self.curve.p
+        inverse_z = pow(self.z, -1, p)
+        x = (self.x*inverse_z)%p
+        y = (self.y*inverse_z)%p
+        return x, y
+    
+    def get_projective_coordinate(self):
+        if self.is_infinity():
+            return 0, 1, 0
+        return self.x, self.y, self.z
     
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             raise NotImplemented("unsupported operand type(s) for ==: '{}' and '{}'").format(self.__class__, type(other))
         if self.curve != other.curve:
             raise ValueError("Comparing two points belonging to different curve contexts")
-        return self.x == other.x and self.y == other.y
+        
+        if self.is_infinity():
+            return other.is_infinity()
+        if other.is_infinity():
+            return self.is_infinity()
+        
+        return self.get_affine_coordinate() == other.get_affine_coordinate()
 
+    def double_projective(self):
+        if self.is_infinity():
+            return PointEC(self.curve,0,1,0)
+        
+        x1, y1, z1 = self.get_projective_coordinate()
+        # Double reference from this site: https://hackmd.io/@cailynyongyong/HkuoMtz6o
+        p = self.curve.p
+        a = self.curve.a
+        w = (a*z1*z1 + 3*x1*x1)%p
+        s = (y1*z1)%p
+        B = (x1*y1*s)%p
+        h= (w*w - 8*B)%p
+        
+        x = (2*h*s)%p
+        y = (w*(4*B-h) - 8*s*s*y1*y1)%p
+        z = (8*pow(s,3,p))%p
+        
+        return PointEC(self.curve,x,y,z)
+    
+    def random_point(self):
+        # Return a random point on finite field of generator G        
+        n = order(self, self.curve.p)
+        k = random.randint(1, n-1)
+        return k * self
+    
+    def phi_dp(self, n:int):
+        if n < 0:
+            raise ValueError("Division polynominal order must not be negative!")
+        if self.is_infinity():
+            return None
+        p = self.curve.p
+        a = self.curve.a
+        b = self.curve.b
+        if n == 0:
+            return 0
+        if n == 1:
+            return 1
+        x, y = self.get_affine_coordinate()
+        if n == 2:
+            return (2*y)%p
+        if n == 3:
+            return (3*pow(x,4,p)+ 6*a*x*x + 12*b*x - a * a)%p
+        if n == 4:
+            return (4*y * (pow(x,6,p) + 5*a*pow(x,4,p) + 20*b*pow(x,3,p)
+                    -5*a*a*pow(x,2,p) - 4*a*b*x - 8*b*b - 3*pow(a,3,p)))%p
+        
+        if n % 2 == 1:
+            # n = 2m + 1
+            m = (n-1)//2
+            return (self.phi_dp(m+2)*pow(self.phi_dp(m),3,p) 
+                    - self.phi_dp(m-1)*pow(self.phi_dp(m+1),3,p)
+                    )%p
+
+        # n = 2m
+        m = n//2
+        return (self.phi_dp(m)*pow(2*y,-1,p)*
+                    (self.phi_dp(m+2)*pow(self.phi_dp(m-1),2,p)
+                    - self.phi_dp(m-2)*pow(self.phi_dp(m+1),2,p))
+                )%p
     
     # Overloading add operators (+) helps us type A + B much easier
-    # Note: "O" is represented as None
     def __add__(self, other):
         if not isinstance(other, self.__class__):
             raise NotImplemented("unsupported operand type(s): '{}' and '{}'").format(self.__class__, type(other))
         if self.curve != other.curve:
             raise ValueError("Performing operator on two points belonging to different curve contexts")
         
-        curve = self.curve
-        if other is None:
+        if self.is_infinity():
+            return other
+        if other.is_infinity():
             return self
-        if self.x == other.x and self.y == curve.negative(other.y):
-            return None
-
-        if self == other:
-            num = (3 * pow(self.x, 2, curve.n) + curve.a) % curve.n # tu
-            den = (2 * self.y) % curve.n # mau
-        else:
-            num = (other.y - self.y) % curve.n
-            den = (other.x - self.x) % curve.n
-
-        lamb = (num * curve.inverse_modulo(den)) % curve.n # num/den
-        x3 = (pow(lamb, 2, curve.n) - self.x - other.x) % curve.n
-        y3 = (lamb * (self.x - x3) - self.y) % curve.n
         
-        return PointEC(curve, x3, y3)
-    
+        curve = self.curve
+        p = curve.p
+        
+        x1, y1, z1 = self.get_projective_coordinate()
+        x2, y2, z2 = other.get_projective_coordinate()
+        # Addition reference from this site: https://hackmd.io/@cailynyongyong/HkuoMtz6o
+        u = (y2*z1 - y1*z2)%p
+        v = (x2*z1 - x1*z2)%p
+        if v==0:
+            if u != 0:
+                return PointEC(curve,0,1,0)
+            return self.double_projective()
+        
+        z3 = (pow(v,3,p)*z1*z2)%p
+        if z3 == 0:
+            return PointEC(curve,0,1,0)
+        
+        A = (u*u*z1*z2 - pow(v,3,p)-2*v*v*x1*z2)%p
+        
+        x3 = (v*A)%p
+        y3 = (u*(v*v*x1*z2-A)-pow(v,3,p)*y1*z2)%p
+        
+        return PointEC(curve,x3,y3,z3)
+        
     def __radd__(self, other):
-        # Handles reversed addition, e.g., sum() or None + Point
-        if other is None:
-            return self
         return self.__add__(other)
     
     def __iadd__(self, other):
         return self + other
     
-    def __mul__(self, n:int):
-        if not isinstance(n, int):
-            raise ValueError("Multiplication only works for a PointEC and a integer")
-        if (n == 0):
-            return None
-        if (n < 0):
-            return -self * n
+    def __mul__(self, k):
+        if isinstance(k, self.__class__):
+            # TODO: write a good explaination for this
+            # ok hear me out: how would you define e^k of e 
+            # belong to field F, in the context of EC?
+            # e^k ~ k * G, with G is a point on the curve
+            # Now what about a^k * a to EC context?
+            # a^k * a ~ a^(k+1)
+            #  
+            # k*G * G ~ (k+1)*G = k*G + G
+            return self + k # hence this return
+        if not isinstance(k, int):
+            raise ValueError("Multiplication only works for a PointEC and a integer or another PointEC")
         
-        q = PointEC(self.curve, self.x, self.y)
-        r = None
-        while n > 0:
-            if n%2 == 1:
+        curve = self.curve
+        if (k == 0):
+            return PointEC(curve,0,1,0)
+        if (k < 0):
+            return (-self) * (-k)
+        
+        q = PointEC(curve, self.x, self.y, self.z)
+        r = PointEC(curve, 0, 1, 0)
+        while k > 0:
+            if k%2 == 1:
                 r = r + q
             q += q
-            n //= 2
+            k //= 2
         # print(f"PointEC mul = {r}")
+        if r.is_infinity():
+            return PointEC(self.curve,0,1,0)
         return r
     
-    def __imul__(self, n:int):
-        return self * n
+    def __imul__(self, p:int):
+        return self * p
 
-    def __rmul__(self, n:int):
-        return self * n
+    def __rmul__(self, p:int):
+        return self * p
+    
+    def __neg__(self):
+        if self.is_infinity():
+            return PointEC(self.curve, 0, 1, 0)
+        p = self.curve.p
+        x = self.x
+        y = (-self.y)%p
+        z = self.z
+        return PointEC(self.curve,x,y,z)
     
     def __sub__(self, other):
-        if other is None:
-            return self
-        if self.x == other.x and self.y == other.y:
-            return None
-        curve = self.curve
-        negative_other = PointEC(curve, other.x, curve.negative(other.y))
-        return self + negative_other
+        if not isinstance(other, self.__class__):
+            raise NotImplementedError("unsupported operand type(s): '{}' and '{}'".format(self.__class__, type(other)))
+        return self + (-other)
     
     def __isub__(self, other):
         return self - other
     
     def __rsub__(self,other):
-        if other is None:
-            return self
         return other - self
     
     def __pow__(self, other:int, modulo:int=None):
-        if modulo and modulo != self.curve.n:
+        if modulo and modulo != self.curve.p:
             raise ValueError("Modulo does not match with interal curve's modulo")
+        if not isinstance(other, int):
+            raise ValueError("Powers on PointEC can only be called with integer!")
+        if other < 0:
+            return (-self) * (-other)
         return self * other
     
+    def __mod__(self, other:int):
+        # TODO: figure out what to do with this
+        return self
+    
     def __str__(self):
-        t = (self.x, self.y)
+        t = (self.x, self.y, self.z)
         return str(t)
     
-    def get_coordinate(self):
-        return self.x, self.y
-    
-    def mul_montgomery_ladder(self, k:int):
-        length = k.bit_length()
-        r0, r1 = PointEC(self.curve, self.x, self.y), 2 * PointEC(self.curve, self.x, self.y)
-        print(f"Original Ladder init: r0={(r0.x, r0.y)} r1={(r1.x, r1.y)}")
-        for i in range(length-2, -1, -1):
-            ki = (k >> i) & 1 # get k-th bit
-            if not ki:
-                r0, r1 = 2 * r0, r0 + r1
-            else:
-                r0, r1 = r0 + r1, 2 * r1
-            assert r1 == r0 + self
-            # print(f"Original Ladder step {i}: r0={(r0.x, r0.y)} r1={(r1.x, r1.y)}")
-        print(f"{r0.x=} {r1.x=}")
-        return r0
+    def __repr__(self):
+        return repr(self.get_affine_coordinate())
 
-def point_addition():
-    n=9739
-    a=497
-    b=1768
-    curve = EC(n,a,b)
-
-
-    X=PointEC(curve, 5274,2841) 
-    Y=PointEC(curve, 8669,740)
-    assert X + Y==PointEC(curve, 1024,4440) 
-    assert X + X==PointEC(curve,7284,2107)
-    P=PointEC(curve, 493,5564)
-    Q=PointEC(curve, 1539,4742)
-    R=PointEC(curve, 4403,5202)
-    S = P + P + Q + R
-    assert S.on_curve()
-    return S
-
-def point_multiplication():
-    n=9739
-    a=497
-    b=1768
-    curve = EC(n,a,b)
+class MontgomeryCurve(EC):
+    def __init__(self, p, a, b):
+        super().__init__(p, a, b)
     
-    X=PointEC(curve, 5323,5438)
-    assert 1337 * X == PointEC(curve, 1089, 6931)
-    P=PointEC(curve, 2339,2213)
-    Q = 7863 * P
-    assert Q.on_curve()
-    return Q
-
-def curves_and_log():
-    n=9739
-    a=497
-    b=1768
-    curve = EC(n,a,b)
+    def __eq__(self, value):
+        return super().__eq__(value)
     
-    g=PointEC(curve, 1804,5368)
+    def func(self):
+        return f"y^2=x^3+{self.a}*x^2+{self.b}*x"
     
-    # Our (Bob's) private key
-    nB = 1829
-    qB = nB * g
-    
-    # Alice sent us qA
-    qA=PointEC(curve, 815,3190)
-    
-    shared_secret = nB * qA # shared_secret = nA * nB * g    
-    print(shared_secret)
-    x_as_str_encoded = str(shared_secret.x).encode()
-    final_hash = hashlib.sha1(x_as_str_encoded)
-    return final_hash.hexdigest()
-    
-def is_pkcs7_padded(message):
-    padding = message[-message[-1]:]
-    return all(padding[i] == len(padding) for i in range(0, len(padding)))
-
-
-def decrypt_flag(shared_secret: int, iv: str, ciphertext: str):
-    # Derive AES key from shared secret
-    sha1 = hashlib.sha1()
-    sha1.update(str(shared_secret).encode('ascii'))
-    key = sha1.digest()[:16]
-    # Decrypt flag
-    ciphertext = bytes.fromhex(ciphertext)
-    iv = bytes.fromhex(iv)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    plaintext = cipher.decrypt(ciphertext)
-
-    if is_pkcs7_padded(plaintext):
-        return unpad(plaintext, 16).decode('ascii')
-    else:
-        return plaintext.decode('ascii')
-    
-def efficient_exchange():
-    n=9739
-    a=497
-    b=1768
-    curve = EC(n,a,b)
-
-    g=PointEC(curve, 1804,5368)
-    
-    iv = 'cd9da9f1c60925922377ea952afc212c'
-    encrypted_flag = 'febcbe3a3414a730b125931dccf912d2239f3e969c4334d95ed0ec86f6449ad8'
-    # Looking at the equation,
-    # one can easily see that there are only two possible y
-    # y1 = sqrt(...) and y2 = -sqrt(...)
-    # so we only need to send the sign bit to know which y we have used
-    
-    nB=6534
-    qB = nB * g
-    
-    qA_x = 4726
-    y_squared = curve.right_term(qA_x)
-    
-    
-    
-    qA_y = pow(y_squared, (curve.n+1)//4, curve.n) # fast sqrt due to n % 4 = 3
-    
-    print(f"{qA_x=} {qA_y=} {y_squared=}")
-    assert qA_y is not None
-    assert curve.left_term(qA_y) == curve.right_term(qA_x)
-    
-    qA = PointEC(curve, qA_x, qA_y)
-    shared_secret = nB * qA
-    # passing x to shared secret
-    return decrypt_flag(shared_secret.x, iv, encrypted_flag)
-
-
-class MontegomeryCurve(EC):
-    # By^2 = x(x^2 + Ax + 1)
-    def left_term(self, y):
-        return self.b * pow(y, 2)
     def right_term(self, x):
-        return x * (x*x + self.a*x + 1)
+        p = self.p
+        return (pow(x, 3, p) + self.a*x*x+self.b*x)%p
 
+class PointMontegomery(PointEC):
+    def __init__(self, curve:MontgomeryCurve, x:int, y = None, z:int = 1):
+        if not isinstance(curve, MontgomeryCurve):
+            raise ValueError("This point must be initialized with a MontgomeryCurve!")
+        self.curve = curve
+        self.x = x
+        self.z = z
+    
+    @property
+    def y(self)->int:
+        curve = self.curve
+        return tonelli_shanks(curve.p, curve.right_term(self.x))
+    
+    def xAdd(self, other, delta):
+        if not isinstance(other, self.__class__):
+            raise NotImplemented("unsupported operand type(s): '{}' and '{}'").format(self.__class__, type(other))
+        if self.curve != other.curve:
+            raise ValueError("Performing operator on two points belonging to different curve contexts")
         
-
-def montgomery_ladder():
-    n=(1 << 255) - 19
-    a=486662
-    b=1
-    curve = EC(n,a,b)
+        if not delta or not isinstance(delta, self.__class__):
+            raise ValueError("This operation require a delta/difference of Point type between two points")
+        
+        p = self.curve.p
+        
+        XP, ZP = self.x, self.z
+        XQ, ZQ = other.x, other.z
+        Xdelta, Zdelta = delta.x, delta.z
+        
+        V0 = (XP + ZP)%p
+        V1 = (XQ - ZQ)%p
+        V1 = (V1 * V0)%p
+        V0 = (XP - ZP)%p
+        V2 = (XQ + ZQ)%p
+        V2 = (V2*V0)%p
+        V3 = pow(V1+V2,2,p)
+        V4 = pow(V1-V2,2,p)
+        
+        X = (Zdelta * V3)%p
+        Z = (Xdelta * V4)%p
+        return PointMontegomery(self.curve, X, None, Z)
     
-    # Testing your own montgomery ladder implementation:
-    X=PointEC(curve, 5323,5438)
-    target = PointEC(curve, 1089, 6931) 
-    k = 1337
-    assert (k * X)  == X.mul_montgomery_ladder(k)
-    # assert 1089 == curve.uniform_montgomery_ladder(1337, X.x)
-    const = 0x1337c0decafe
-    return X.mul_montgomery_ladder(const)
+    def xDouble(self):
+        a = self.curve.a
+        p = self.curve.p
+        XP, ZP = self.x, self.z
+        V1 = pow(XP + ZP,2,p)
+        V2 = pow(XP - ZP,2,p)
+        X = (V1*V2)%p
+        a24 = ((a+2)*pow(4,-1,p))%p
+        V1 = (V1 - V2)%p # 4*XP*ZP
+        V3 = (a24 * V1)%p
+        V3 = (V3 + V2)%p
+        Z = (V1*V3)%p
+        
+        return PointMontegomery(self.curve, X, None, Z)
     
+    def __mul__(self, k):
+        if not isinstance(k, int):
+            raise ValueError("Multiplication only works for a PointEC and a integer or another PointEC")
+        
+        curve = self.curve
+        R0 = PointMontegomery(curve, self.x)
+        R1 = R0.xDouble()
+        
+        bit_len = k.bit_length()
+        for i in range(bit_len-2, -1, -1):
+            ki = (k >> i) & 1
+            if not ki:
+                R0, R1 = R0.xDouble(), R0.xAdd(R1, self)
+            else:
+                R0, R1 = R0.xAdd(R1, self), R1.xDouble()
+        print(f"{R0.x=} {R1.x=}")
+        return R0
 
-
+class PolynominalFunction:
+    def __init__(self, polynominals: dict[int, float]):
+        self.polies = polynominals
     
-def attack_baby_step_giant_step(g:int, a:int, p:int):
-    m = math.ceil(math.sqrt(p -1))
-    gj_table: dict[int, list[int]] = {}
-    for j in range(m):
-        gj = pow(g, j, p)
-        if gj in gj_table:
-            gj_table[gj].append(j)
-        else:
-            gj_table[gj] = [j]
-    g_m_neg = pow(g, -m, p) 
-    gamma = a # a * (g^-m)^i, i currently i=0
-    for i in range(m):
-        if gamma in gj_table:
-            j = gj_table[gamma][0]
-            return i + m*j
-        gamma *= g_m_neg
-        gamma %= p
+    def get_coeff(self, power:int):
+        return self.polies[power]
     
-    return None
+    @property
+    def highest_power(self)->int:
+        return max(self.polies.keys())
+    
+    @property
+    def highest_intermediate(self)->tuple[int,float]:
+        return self.highest_power, self.polies[self.highest_power]
+    
+    def divide_func(self, other):
+        if not isinstance(other, self.__class__):
+            raise NotImplementedError()
+        quotient_func = PolynominalFunction({})
+        remainder_func = PolynominalFunction(self.polies)
+        while (remainder_func.highest_power >= other.highest_power):
+            first_power, first_coeff = remainder_func.highest_intermediate
+            other_power, other_coeff = other.highest_intermediate
+            
+            # print(f"{remainder_func.highest_power=} {other.highest_power=}")
+            # Find ax^y
+            power_difference = first_power - other_power
+            coeff_quotient = first_coeff / other_coeff
+            print(f"{power_difference=} {coeff_quotient=}")
+            
+            # Add to quotient, calculate subtraction 
+            quotient_func += PolynominalFunction({power_difference: coeff_quotient})
+            print(other * PolynominalFunction({power_difference: coeff_quotient}) )
+            remainder_func -= other * PolynominalFunction({power_difference: coeff_quotient})  
+            # print("Current quotient: ",quotient_func)
+            # print("Current remainder: ", remainder_func)
+            time.sleep(5)
 
-def attack_baby_step_giant_step_EC(G:PointEC, P:PointEC, p:int):
-    m:int = math.ceil(math.sqrt(p -1))
-    gj_table: dict[tuple[int,int], list[int]] = {}
-    # xG = P
-    # => (j + im)G = P
-    # => jG = P - imG
-    # => jG = P - i * gamma
+        return quotient_func, remainder_func
+
+    def __str__(self):
+        final_str = "f(x)="
+        for key, value in self.polies.items():
+            final_str += f"{value}*x^{key} + "
+        return final_str
+    
+    def __add__(self, other):
+        if not isinstance(other, self.__class__):
+            raise NotImplementedError()
+        for power, coeff in other.polies.items():
+            if power in self.polies:
+                self.polies[power] += coeff
+            else:
+                self.polies[power] = coeff
+            if self.polies[power] == 0:
+                self.polies.pop(power)
+        return self
+    
+    def __sub__(self, other):
+        if not isinstance(other, self.__class__):
+            raise NotImplementedError()
+        for power, coeff in other.polies.items():
+            if power in self.polies:
+                self.polies[power] -= coeff
+            else:
+                self.polies[power] = -coeff
+            if self.polies[power] == 0:
+                self.polies.pop(power)
+        return self
+    
+    def __mul__(self, other):
+        if not isinstance(other, self.__class__):
+            raise NotImplementedError()
+        poly_funcs = PolynominalFunction({})
+        for power, coeff in other.polies.items():
+            # Multiply ax^k*f(x)
+            polies = dict(self.polies)
+            for func_pow, func_coeff in dict(polies).items():
+                # Add new pow
+                polies[func_pow + power] = func_coeff * coeff
+                # Remove old pow
+                polies.pop(func_pow)
+            poly_funcs += PolynominalFunction(polies)
+        return poly_funcs
+        
+    
+    def __floordiv__(self, other):
+        return self.divide_func(other)[0]
+    
+    def __div__(self,other):
+        return self.divide_func(other)[0]
+    
+    def __mod__(self, other):
+        return self.divide_func(other)[1]
+    
+    def __gt__(self,other):
+        if not isinstance(other, self.__class__):
+            raise NotImplementedError()
+        return self.highest_power > other.highest_power
+    
+    def __lt__(self,other):
+        if not isinstance(other, self.__class__):
+            raise NotImplementedError()
+        return self.highest_power < other.highest_power
+
+class LineEC:
+    def __init__(self, slope:int, xT:int, yT:int):
+        self.slope = slope
+        self.xT = xT
+        self.yT = yT
+    
+    def value(self, Q: PointEC):
+        xQ, yQ = Q.get_affine_coordinate()
+        return yQ - self.yT - self.slope * (xQ - self.xT)
+
+class VerticalEC:
+    def __init__(self, point:PointEC):
+        x, _ = point.get_affine_coordinate()
+        self.x = x
+    
+    def value(self, Q: PointEC):
+        xQ, _ = Q.get_affine_coordinate()
+        return xQ - self.x
+    
+def get_line_from_two_points_ec(T:PointEC, P:PointEC):
+    if T.curve != P.curve:
+        raise ValueError("Two points belong to different curves!")
+    x1, y1 = T.get_affine_coordinate()
+    x2, y2 = P.get_affine_coordinate()
+
+    p = T.curve.p
+    
+    if x1 == x2 and y1 == y2:
+        # Tangent line slope lambda = (3x1^2 + a) / (2y1)
+        num = (3 * x1 * x1 + T.curve.a) % p
+        den = pow(2 * y1, -1, p)
+    else:
+        # Chord line slope lambda = (y2 - y1) / (x2 - x1)
+        num = (y2 - y1) % p
+        den = pow((x2 - x1) % p, -1, p)
+        
+    slope = (num * den) % p
+
+    return LineEC(slope, x1, y1)
+
+def miller_loop(P:PointEC, Q:PointEC, r:int):
+    if P.curve != Q.curve:
+        raise ValueError("Two points belong to different curves!")
+    
+    n = r.bit_length()
+    T = P
+    f = 1
+    p = P.curve.p
+    
+    for i in range(n-2, -1, -1):
+        twoT = 2*T
+        line_2T = get_line_from_two_points_ec(T, T)
+        vertical_2T = VerticalEC(twoT)
+        f = (f*f*(line_2T.value(Q) * pow(vertical_2T.value(Q), -1, p) ) )%p
+        T = twoT
+        # Do addition step on 1 bit
+        if (r >> i) & 1:
+            TP = T + P
+            line_TP = get_line_from_two_points_ec(T, P)
+            vertical_TP = VerticalEC(TP)
+            f = (f* (line_TP.value(Q) * pow(vertical_TP.value(Q), -1, p) ) )%p
+            T = TP
+        
+    return f % p
+
+def tate_pairing(P: PointEC, Q:PointEC, r:int):
+    if P.curve != Q.curve:
+        raise ValueError("Two points belong to different curves!")
+    curve = P.curve
+    gP = miller_loop(P, Q, r)
+    return pow(gP, (curve.order-1)//r, curve.p)
+
+# =====================
+# Attack code
+# ---------------------
+# Contains implementations of discrete-log attacks (baby-step/giant-step)
+# that work on integer groups or elliptic-curve groups represented by
+# PointEC. These functions are intended to be generic and used by the
+# higher-level Pohlig-Hellman routine below.
+# =====================
+# Attack code
+# Main implementation here
+def attack_baby_step_giant_step(g:int|PointEC, a:int|PointEC, p:int, known_order:int=None):
+    # assuming p is prime
+    print(f"{g=} {a=} {p=}")
+    if known_order:
+        n = known_order
+    else:
+        n = order(g, p)
+    m = math.ceil(math.sqrt(n))
+    gj_table: dict[str, list[int]] = {}
     print(f"Constructing lookup table jG {m=} ...")
     log_step = max(1, m//10) # after log_step steps, print out the progess
-    for j in range(1, m):
-        gj = (j * G).get_coordinate() # operators +, * returns a PointEC object
-        if gj in gj_table:
-            gj_table[gj].append(j)
+    
+    gj = pow(g, 0, p)
+    for j in range(m):
+        key = repr(gj)
+        if key in gj_table:
+            gj_table[key].append(j)
         else:
-            gj_table[gj] = [j]
+            gj_table[key] = [j]
+        gj *= g
         if (j % log_step == 0):
-            print(f"Progress: {i / m * 100:.0f}% ({i}/{m})")
+            log_str = f"Progress: {j / m * 100:.0f}% ({j}/{m})"
+            print(log_str)
     print(f"Lookup table JG constructed, length={len(gj_table)}")
-    mG_const = m*G # constant
-    gamma = 0 # gamma = imG, i currently i=0
+    g_m_neg: int|PointEC = pow(g, -m, p) 
+    gamma = a%p # a * (g^-m)^i, i currently i=0
     for i in range(m):
-        rhs = (P - gamma).get_coordinate()
-        print(f"Checking if {rhs=} is in table...")
-        if rhs in gj_table:
-            j = gj_table[rhs][0]
-            print(f"Found matching {j=} {rhs=}")
-            return i + m*j
-        gamma += mG_const
+        key = repr(gamma)
+        # print(f"Checking {key} in table...")
+        if key in gj_table:
+            j = gj_table[key][-1]
+            print(f"Found matching {gamma=}, {j=} {i=} x={j + m*i}")
+            return j + m*i
+        gamma *= g_m_neg
+        if isinstance(gamma, int):
+            gamma %= p
     
     return None
 
-def extra_excercises():
-    a = 1
-    b = 7
-    p = 81663996540811672901764249733343363790991183353803305739092974199965546219729
-    G_coordinates = (14023374736200111073976017545954000619736741127496973904317708826835398305431, 23173384182409394365116200040829680541979866476670477159886520495530923549144)
-    P_coordinates = (45277951688968912485631557795066607843633896482130484276521452596515645125170, 33416418291776817124002088109454937261688060362650609033690500364258401702752)
-    ciphertext = '44af53c95092c86c04b67358aad3911282347862fec02f8943ea2eb5297780a7098faef27b2d2dbab7cf29bec5e32adcc7be6f4b57370aa2b6f6d1eafc5c3f3a07db1162d00b0037b757450b6fd405e0'
-    iv = '29d6bba244e66a562969a6dae8e61449'
+
+def pohlig_hellman(g:int|PointEC, a:int|PointEC, p:int, known_order:int=None):
+    # TODO: implement cardinality count for EC and any arbitary modulo
+    if known_order:
+        n = known_order
+    else:
+        n = order(g, p)
+    prime_factors = get_prime_factor(n)
+    print(f"Pohllig-Hellman: {n=} factor={prime_factors}")
+    crt_terms = []
+    for prime, prime_exp in prime_factors.items():
+        exp:int = pow(prime, prime_exp)
+        gi = pow(g, n//exp, p)
+        ai = pow(a, n//exp, p)
+        xi = attack_baby_step_giant_step(gi, ai, p, exp)
+        if xi is None:
+            return None
+        crt_terms.append((xi, exp))
+    print(f"{crt_terms=}")
+    return crt_solver(crt_terms)
+
+def order(g, p:int):
+    if isinstance(g, int):
+        n = mult_order(p, g)
+        assert pow(g, n, p) == 1
+        return n
+    if isinstance(g, PointEC):
+        curve = g.curve
+        field = GF(p)
+        E = EllipticCurve(field, [curve.a, curve.b])
+        Gxy = g.get_affine_coordinate()
+        G = E(*Gxy)
+        return int(G.order())
+
+    raise NotImplementedError("unsupported order for type: ", type(g))
+
+# Helper function
+# =====================
+# Helper functions
+# ---------------------
+# Utility routines used by the attack code: CRT solver, primality
+# tests, factoring helpers and Tonelli-Shanks. Note: some helper
+# functions may be slow for very large inputs and some rely on
+# probabilistic algorithms (Pollard Rho, Miller-Rabin).
+# =====================
+def schoof_algo(curve:EC, b:int=1):
+    pass
+    p = curve.p
+    primes_product = 1
+    prime = 2
+    q = pow(p, b)
+    upper_bound = 4 * math.ceil(math.sqrt(q))
+    while primes_product < upper_bound:
+        # Decide whether l is an Atkin or Elkies prime
+        delta = pow(prime, 2) - 4 * q
+        if delta > 0:
+            # Elkies prime
+            pass
+        else:
+            # Atkins prime
+            pass
     
-    Ellipsis
+
+def crt_solver(terms:list[tuple[int,int]]):
+    # assuming every point inside is co-prime moduli
+    product = 1
+    for _, modulo in terms:
+        product *= modulo
+    x = 0
+    for remainder, modulo in terms:
+        N = product // modulo
+        M = pow(N, -1, modulo)
+        x += remainder * N * M
+    return x%product
+
+def is_prime(n: int):
+    if n > 360_000_000_000:
+        return is_prime_miller_rabin(n)
+    return is_prime_naive(n)
+
+def is_prime_naive(n):
+    if (n == 1):
+        return False
+    if (n == 2 or n == 3):
+        return True
+    if (n % 2 == 0 or n % 3 == 0):
+        return False
+    # A prime that is not 2 or 3
+    # must be in a form of 6k + 1 or 6k + 5
+    d = 5
+    while(d * d <= n):
+        if (n % d == 0 or n % (d + 2) == 0): # check for 6k - 1 aka 6k + 5 and 6k + 1
+            return False
+        d += 6 # skipping 6k + 2/3/4 (6k + 5 is actually 6k - 1, and we start at 5 aka 6 * 1 - 1)
+    return True
+
+def is_prime_miller_rabin(n, rounds:int=250):
+    # Miller-Rabin can ensure if a number is not a prime (if False => confidence = 100%),
+    # but cannot ensure if a number is prime (if True => confidence != 100%)
+    if n % 2 == 0:
+        return False
+    # Factor two out
+    temp = n -1
+    s = 0
+    while (temp > 1 and temp % 2 == 0):
+        temp = temp // 2
+        s += 1
+    d = temp
+    # print(f"{n-1=} {d=} {s=}" )
+    # Hybrid approrach with some deterministic bases for number < 2^64 bits
+    bases = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 44}
+    num_bases_to_generate = rounds - len(bases)
+    for _ in range(num_bases_to_generate):
+        # Append random bases into base
+        random_base = random.randint(2, n -2)
+        bases.add(random_base)
+    
+    # test for primes
+    for base in bases:
+        x = pow(base, d, n)
+        for i in range(s):
+            y = pow(x, 2, n)
+            if y == 1 and x != 1 and x != n-1:
+                return False
+            x = y
+        if y != 1:
+            return False
+    
+    return True
+
+def mult_order(p : int, a: int):
+    # Return the order of a^k mod p
+    # aka smallest k where a^k = 1 mod p
+    n = phi_euler(p)
+    factors = get_prime_factor(n)  # {prime: exponent}
+    # assert pow(a,n,p) == 1
+    print(f"{n=} {factors=}")
+    order = n
+    for q in factors.keys():
+        # print(f"{order=} {q=}")
+        # print(f"Mult_order step: {a=} {order//q=}")
+
+        while order % q == 0 and pow(a, order // q, p) == 1:
+            order //= q
+    print(f"{order=}")
+    return order
+
+def phi_euler(p: int):
+    # Find numbers of co-primes of p from 1 to p
+    prime_factors = get_prime_factor(p)
+    # print(f"{p=} {prime_factors=}")
+    product = 1
+    for prime, prime_exponent in prime_factors.items():
+        product *= pow(prime-1, prime_exponent)
+    return product
+
+def get_prime_factor(n: int) -> dict[int, int]:
+    temp = n
+    n_factors: dict[int, int] = {}
+    while (temp > 1):
+        # Check if it's prime 
+        if is_prime(temp):
+            n_factors[temp] = 1
+            break
+        # Find a factor
+        while (True):
+            if temp < (2 << 32):
+                factor = smallest_prime_factor(temp)
+            else:
+                factor = pollard_rho_factor(temp)
+            if not factor:
+                print("Retrying the function...!")
+                pass
+            else:
+                break
+        # Factor that number out of temp
+        exp = 0
+        while(temp > 1 and temp % factor == 0):
+            temp //= factor
+            exp += 1
+        # Recursive factorization if the factor is not prime
+        if is_prime(factor):
+            n_factors[factor] = exp
+        else:
+            factor_primes = get_prime_factor(factor)
+            # Update primes inside factors accordingly
+            # to the number of factor's exponent
+            if exp > 1:
+                for prime in factor_primes.keys():
+                    factor_primes[prime] *= exp 
+            n_factors.update(factor_primes)
+    return n_factors
+
+def smallest_prime_factor(n: int):
+    if n <= 1 or not isinstance(n, int):
+        raise ValueError("Value must be a positive integer >=2!")
+    if n % 2 == 0:
+        return 2
+    if n % 3 == 0:
+        return 3
+    d = 5
+    while d * d <= n:
+        if n % d == 0:
+            return d
+        if (n % (d + 2)) == 0:
+            return d + 2
+        d += 6
+    return d
+
+def pollard_rho_factor(n :int):    
+    b = random.randint(2, n-2)
+    print("Pollard Rho algo!")
+    print(f"{n=}\t{b=}")
+    
+    def g(a: int):
+        return (a * a + b) % n
+            
+    d = 1
+    steps = 100
+    max_outer_loop = 1000000
+    found_d = False
+    
+    last_x = x = random.randint(2, n-2)
+    last_y = y = x
+    
+    for loop in range(max_outer_loop):
+        if (d != 1):
+            found_d = True
+            break
+        product = 1
+        steps_failed = False
+        
+        for i in range(steps):
+            x = g(x) # turtle
+            y = g(g(y)) # hare
+            if x == y:
+                # Algo failed, fall back to step = 1
+                print(f"Multiple step failed at {i}! Reverting to step 1!")
+                steps_failed = True
+                break
+            product = (product * abs(x - y)) % n
+        
+        # Termination condition
+        if steps_failed and steps == 1:
+            print("x and y converge!")
+            return None
+        
+        # Set step to 1
+        if steps != 1 and (steps_failed or loop >= max_outer_loop // 2):
+            print("Setting steps to 1...")
+            steps = 1
+            x = last_x
+            y = last_y
+            continue
+
+        last_x = x
+        last_y = y
+        
+        d = gcd_euclid(product, n)
+    
+    if d == n:
+        print("d meets n!")
+        return None
+    if not found_d:
+        print("Maximum global step reached!")
+        return None
+    print(f"Found {d=}")
+    return d
+
+def gcd_euclid(big: int, small: int):
+    if big < small:
+        return gcd_euclid(small, big)
+    a = big
+    b = small
+    while (b > 0):
+        q = a // b
+        r = a % b
+        if r == 0:
+            break
+        a = b
+        b = r 
+    return b
+
+def factor_out_two_powers(n : int):
+    if n < 0 or not isinstance(n, int):
+        raise ValueError("Value must be a positive integer!")
+    
+    q: int = n
+    exp: int = 0
+    # n = q * 2^exp where q must be odd integer
+    while(q > 1 and q & 1 == 0): 
+        exp += 1
+        q = q >> 1
+    return q, exp
+
+def tonelli_shanks(p: int, n: int):
+    # if smallest_prime_factor(p) == p:
+    #     raise ValueError("p must be a prime!")
+    print(f"Tonelli shanks: {p=} {n=}")
+    q, s = factor_out_two_powers(p-1)
+    z = None
+    for i in range(2, p):
+        if pow(i, (p-1)//2, p) == p-1:
+            z = i
+            break
+    if not z:
+        return None
+    m = s
+    c = pow(z, q, p)
+    t = pow(n, q, p)
+    r = pow(n, (q+1)//2, p)
+    while(True):
+        if t == 0:
+            return 0
+        if t == 1:
+            return r
+        
+        step = None
+        for i in range(1, m):
+            temp = pow(t, 1 << i, p)
+            if temp == 1:
+                step = i
+                break    
+        if not step:
+            return None
+        b_pow = 1 << (m - step - 1)
+        b = pow(c, b_pow, p)
+        m = step
+        c = (b * b) % p
+        t = (t * c) % p
+        r = (r * b) % p
+        
+    return r
+
+
+def cli(host="socket.cryptohack.org", port="13000", data={}):
+    """
+    Call the module's main() as if from command line.
+    Pass argv as a list of tokens.
+    """
+    if isinstance(port, int):
+        port = str(port)
+    argv = ["-H", host, "-P", port, "-d", json.dumps(data), "-o", "out_from_curveball.txt"]
+    # sjc.main expects a list of argv tokens (or None to use sys.argv)
+    return sjc.main(argv)
+
+# =====================
+# Test code
+# ---------------------
+# The following functions are simple tests and sanity checks for the
+# EC/PointEC classes and attack implementations. They rely on both the
+# pure-Python EC code and Sage for exact cardinality when needed. They
+# are intended for local development and demonstration rather than as
+# production-grade unit tests.
+# =====================
+def test_ec_class():
+    def point_addition():
+        # cryptohack example
+        n=9739
+        a=497
+        b=1768
+        curve = EC(n,a,b)
+
+
+        X=PointEC(curve, 5274,2841) 
+        Y=PointEC(curve, 8669,740)
+
+        assert X + Y==PointEC(curve, 1024,4440) 
+        assert X + X==PointEC(curve,7284,2107)
+        P=PointEC(curve, 493,5564)
+        Q=PointEC(curve, 1539,4742)
+        R=PointEC(curve, 4403,5202)
+        S = P + P + Q + R
+        assert S.on_curve()
+        return S
+
+    def point_multiplication():
+        # cryptohack example
+        n=9739
+        a=497
+        b=1768
+        curve = EC(n,a,b)
+        
+        X=PointEC(curve, 5323,5438)
+        assert 1337 * X == PointEC(curve, 1089, 6931)
+        P=PointEC(curve, 2339,2213)
+        Q = 7863 * P
+        assert Q.on_curve()
+        return Q
+    
+    try:
+        point_addition()
+        point_multiplication()
+    except AssertionError as e:
+        _, _, tb = sys.exc_info()
+        traceback.print_tb(tb) # Fixed format
+        tb_info = traceback.extract_tb(tb)
+        filename, line, func, text = tb_info[-1]
+
+        print('An error occurred on line {} in statement {}'.format(line, text))
+    
+    print("Done testing!")
+
+def test_baby_attack_int(num_bytes:int=6):
+    p = number.getPrime(num_bytes*8)
+    g = int.from_bytes(os.urandom(num_bytes))
+    x = int.from_bytes(os.urandom(num_bytes))
+    print(f"Initializing test: {g=} {x=} {p=}")
+    
+    a = pow(g, x, p)
+    print(f"Trying to attack BSGS, {a=} ...")
+    guessed_x = attack_baby_step_giant_step(g,a,p)
+    if not guessed_x:
+        print("Test failed! x not found!")
+        pass
+    else:
+        assert a == pow(g,guessed_x,p)
+
+def test_baby_attack_int(num_bytes:int=6):
+    p = number.getPrime(num_bytes*8)
+    g = int.from_bytes(os.urandom(min(num_bytes-2, 4)))
+    x = int.from_bytes(os.urandom(num_bytes))
+    print(f"Initializing test: {g=} {x=} {p=}")
+    
+    a = pow(g, x, p)
+    print(f"Trying to attack BSGS, {a=} ...")
+    guessed_x = attack_baby_step_giant_step(g,a,p)
+    if not guessed_x:
+        print("Test failed! x not found!")
+        pass
+    else:
+        assert a == pow(g,guessed_x,p)
+    
+def test_baby_attack_ec(a:int,b:int ,num_bytes:int=6):
+    p = number.getPrime((a+b).bit_length())
     curve = EC(p, a, b)
-    G = PointEC(curve, G_coordinates[0], G_coordinates[1])
-    P = PointEC(curve, P_coordinates[0], P_coordinates[1])
+    j = None
+    while(j is None):
+        i = random.randint(0, p)
+        j = tonelli_shanks(p, curve.right_term(i))
+    G = PointEC(curve, i, j)  
+    assert G.on_curve()
     
-    print(G.on_curve())
-    print(P.on_curve())
-    # After fooling around a bit with p, I discover two things:
-    # 1. p is big as hell, constructing lookup table of sqrt(p-1) length is a chore
-    # 2. p can be factorizable, albeit with a certain probability.
+    x = int.from_bytes(os.urandom(num_bytes))
+    print(f"Initializing test: {curve.func()} {p=} {G=}")
+    A = x*G
+    print(f"Trying to attack BSGS, {x=} {A=} ...")
+    guessed_x = attack_baby_step_giant_step(G, A, p)
     
-    return get_prime_factor(43623929776074611592822782977213335358435461193270996655498383653827749049-1)
+    if not guessed_x:
+        print("Test failed! x not found!")
+        pass
+    else:
+        assert A == guessed_x*G
+    
+def test_pohlig_hellman_int(num_bytes:int=6):
+    p = number.getPrime(num_bytes*8)
+    g = int.from_bytes(os.urandom(min(num_bytes-2, 4)))
+    x = int.from_bytes(os.urandom(num_bytes))
+    print(f"Initializing test: {g=} {x=} {p=}")
+    
+    a = pow(g, x, p)
+    print(f"Trying to attack pohlig_hellman, {a=} ...")
+    guessed_x = pohlig_hellman(g, a, p)
+    # print(f"Found {x=}")
+    assert a == pow(g, guessed_x, p)
 
-def schoof_algorithm(curve:EC, p:int):
-    # assume p is prime
-    # assert is_prime(p)
-    N = 4 * math.ceil(math.sqrt(p))
-    # Let's try to factorize it
-    l_factors = get_prime_factor(N)
-    # Find t mod l
+def test_pohlig_hellman_ec(a:int,b:int,num_bytes:int=6):
+    p = number.getPrime(num_bytes*8)
+    curve = EC(p, a, b)
     
+    j = None
+    while(j is None):
+        i = random.randint(0, p)
+        j = tonelli_shanks(p, curve.right_term(i))
+    print(f"{i=} {j=}")
+    G = PointEC(curve, i, j)
+    assert G.on_curve()
     
-
-def main():
-    return montgomery_ladder()
-
+    x = int.from_bytes(os.urandom(num_bytes))
+    print(f"Initializing test: {curve.func()} {p=} {G=}")
+    A = x*G
+    print(f"Trying to attack Pohllig-Hellman, {x=} {A=} ...")
+    guessed_x = pohlig_hellman(G, A, p)
+    
+    if not guessed_x:
+        print("Test failed! x not found!")
+        pass
+    else:
+        assert A == guessed_x*G
+    
 if __name__ == "__main__":
-    print(main())
+    # Command-line interface:
+    # - If --test is provided, run the built-in tests.
+    # - Otherwise expect three integers: p g a and an optional algorithm name
+    #   (alg can be 'bsgs' or 'ph' / 'pohlig' for Pohlig-Hellman).
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run BSGS or Pohlig-Hellman or tests")
+    parser.add_argument("p", nargs="?", type=int, help="modulus or curve prime p (integer)")
+    parser.add_argument("g", nargs="?", type=int, help="generator g (integer) or encoded PointEC not supported here")
+    parser.add_argument("a", nargs="?", type=int, help="target a such that a = g^x (integer)")
+    parser.add_argument("alg", nargs="?", default="bsgs", help="algorithm: bsgs (default) or ph (pohlig)")
+    parser.add_argument("--test", action="store_true", help="run internal tests instead of CLI attack")
+
+    args = parser.parse_args()
+
+    if args.test:
+        ec_tuple = (486662, 1)  # for passing convenience
+        test_ec_class()
+        # test_baby_attack_int(6)
+        test_baby_attack_ec(*ec_tuple)
+        # test_pohlig_hellman_int(6)
+        test_pohlig_hellman_ec(*ec_tuple, 4)
+    else:
+        if args.p is None or args.g is None or args.a is None:
+            parser.error("When not using --test you must provide p, g and a as integers\nList of available alg: pohlig-hellman, bsgs")
+            
+        p = int(args.p)
+        g = int(args.g)
+        a = int(args.a)
+        alg = args.alg.lower()
+
+        if alg in ("ph", "pohlig", "pohlig-hellman", "pohlig_hellman"):
+            print("Running Pohlig-Hellman...")
+            res = pohlig_hellman(g, a, p)
+        else:
+            # default to baby-step giant-step
+            print("Running baby-step giant-step (BSGS)...")
+            res = attack_baby_step_giant_step(g, a, p)
+
+        print(f"Result: {res}")
