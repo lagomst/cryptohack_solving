@@ -366,10 +366,31 @@ def baitapthay():
     assert G.on_curve()
     assert P.on_curve()
     n = order(G, p)
+    primes_factor = get_prime_factor(n)
     
-    return pohlig_hellman(G, P, p)
     
-    return n, get_prime_factor(n)
+    # Here the last factor is pretty big (10^64), while other factors are small (<10^6)
+    # Therefore, we can smartly attack this by dividing it by the big factor
+    # And attack the small subgroup of smaller order
+    biggest_prime = max(primes_factor.keys())
+    subgroup_order = 1
+    for prime, exp in primes_factor.items():
+        if prime != biggest_prime:
+            subgroup_order *= pow(prime,exp)
+    
+    
+    small_order_G = G * subgroup_order
+    small_order_P = P * subgroup_order
+    x = attack_baby_step_giant_step(small_order_G, small_order_P, p, known_order=subgroup_order)
+    if not x:
+        return None
+    # Now that we found x such that small_order_G * x = small_order_P
+    # Recall that x = key (mod subgroup_order)
+    # while key lie somehere in order n
+    
+    assert x * small_order_G == small_order_P
+    assert x * G == P
+    return x
 
 def moving_problems():
     p = 1331169830894825846283645180581
@@ -440,8 +461,11 @@ def moving_problems():
     cipher = AES.new(key, AES.MODE_CBC, iv)
     plaintext = cipher.decrypt(ciphertext)
     return plaintext
+
+
+
     
-    
+
 def main():
     print("Usage: python -c 'from solution.ec import *; print(<function>())'")
     

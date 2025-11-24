@@ -1,0 +1,838 @@
+Wireshark SSL debug log 
+
+GnuTLS version:    3.8.4
+Libgcrypt version: 1.10.2-unknown
+
+
+dissect_ssl enter frame #8 (first time)
+packet_from_server: is from server - FALSE
+  conversation = 0000022DE9E6FEE0, ssl_session = 0000022DE9E70B40
+  record: offset = 0, reported_length_remaining = 517
+dissect_ssl3_record: content_type 22 Handshake
+decrypt_ssl3_record: app_data len 512, ssl state 0x00
+packet_from_server: is from server - FALSE
+decrypt_ssl3_record: using client decoder
+decrypt_ssl3_record: no decoder available
+dissect_ssl3_handshake iteration 1 type 1 offset 5 length 508 bytes
+Calculating hash with offset 5 512
+ssl_dissect_hnd_hello_common found CLIENT RANDOM -> state 0x01
+
+dissect_ssl enter frame #10 (first time)
+packet_from_server: is from server - TRUE
+  conversation = 0000022DE9E6FEE0, ssl_session = 0000022DE9E70B40
+  record: offset = 0, reported_length_remaining = 4593
+ssl_try_set_version found version 0x0303 -> state 0x91
+dissect_ssl3_record: content_type 22 Handshake
+decrypt_ssl3_record: app_data len 122, ssl state 0x91
+packet_from_server: is from server - TRUE
+decrypt_ssl3_record: using server decoder
+decrypt_ssl3_record: no decoder available
+dissect_ssl3_handshake iteration 1 type 2 offset 5 length 118 bytes
+ssl_try_set_version found version 0x0304 -> state 0x91
+ssl_dissect_hnd_hello_common found SERVER RANDOM -> state 0x93
+ssl_set_cipher found CIPHER 0x1302 TLS_AES_256_GCM_SHA384 -> state 0x97
+trying to use TLS keylog in B:\schoolwork\crypto\excercise\wireshark\authenticate handshake\secret.txt
+  checking keylog line: SERVER_HANDSHAKE_TRAFFIC_SECRET d8c7c79e62892bd09bafe063b1f948880855589ef13eb847ca27e8436aa6ad80 c64856c95f298b1caae60b3d8146960e700b1dc3354a3f46f05ca77362df599a0729701a92716573360dcdd50aa28fe4
+    matched server_handshake
+  checking keylog line: EXPORTER_SECRET d8c7c79e62892bd09bafe063b1f948880855589ef13eb847ca27e8436aa6ad80 80ca869cdc745da05c7d4935813214b010d0cd45ab0671f9f8958401a561ee381f1529c4ff0270baa8dbf2bd052badc4
+    matched exporter
+  checking keylog line: SERVER_TRAFFIC_SECRET_0 d8c7c79e62892bd09bafe063b1f948880855589ef13eb847ca27e8436aa6ad80 c87fb7d3054e1f6635f2fc1cb1d0a6dd2a42bbff851d8890ae79fe3cf9be09a8bda8f1acb3ac6c58f0339064a52f9c51
+    matched server_appdata
+  checking keylog line: CLIENT_HANDSHAKE_TRAFFIC_SECRET d8c7c79e62892bd09bafe063b1f948880855589ef13eb847ca27e8436aa6ad80 ca8fb94500b13314d4c47158b1e9c7e5d3374cf9c5703b6d8ab879e99af1529d0e013b84ae1e7b15233ff64a1ed6e06c
+    matched client_handshake
+  checking keylog line: CLIENT_TRAFFIC_SECRET_0 d8c7c79e62892bd09bafe063b1f948880855589ef13eb847ca27e8436aa6ad80 0bdc2c7a2c798ff81081067d1e8844c8467e339dae1e7017910ae8ebc3482fa52d160d1f00f2b93fdd78cfd41bb68e8f
+    matched client_appdata
+tls13_load_secret transitioning to new key, old state 0x97
+tls13_load_secret Retrieved TLS 1.3 traffic secret.
+Client Random[32]:
+| d8 c7 c7 9e 62 89 2b d0 9b af e0 63 b1 f9 48 88 |....b.+....c..H.|
+| 08 55 58 9e f1 3e b8 47 ca 27 e8 43 6a a6 ad 80 |.UX..>.G.'.Cj...|
+CLIENT_HANDSHAKE_TRAFFIC_SECRET[48]:
+| ca 8f b9 45 00 b1 33 14 d4 c4 71 58 b1 e9 c7 e5 |...E..3...qX....|
+| d3 37 4c f9 c5 70 3b 6d 8a b8 79 e9 9a f1 52 9d |.7L..p;m..y...R.|
+| 0e 01 3b 84 ae 1e 7b 15 23 3f f6 4a 1e d6 e0 6c |..;...{.#?.J...l|
+tls13_generate_keys CIPHER: AES256
+tls13_generate_keys key_length 32 iv_length 12
+Client Write Key[32]:
+| 6d 1b e6 e4 00 55 4c 63 3c 6f bb df 21 c5 82 d5 |m....ULc<o..!...|
+| 78 8b e3 2b 3c e0 76 89 d1 a9 96 11 e8 d3 8d fa |x..+<.v.........|
+Client Write IV[12]:
+| dc 4e ea 94 81 b5 8e 9c 63 b2 41 37             |.N......c.A7    |
+tls13_generate_keys ssl_create_decoder(client)
+decoder initialized (digest len 48)
+tls13_generate_keys Client ready using cipher suite 0x1302 (cipher AES256 hash SHA384)
+tls13_load_secret transitioning to new key, old state 0x97
+tls13_load_secret Retrieved TLS 1.3 traffic secret.
+Client Random[32]:
+| d8 c7 c7 9e 62 89 2b d0 9b af e0 63 b1 f9 48 88 |....b.+....c..H.|
+| 08 55 58 9e f1 3e b8 47 ca 27 e8 43 6a a6 ad 80 |.UX..>.G.'.Cj...|
+SERVER_HANDSHAKE_TRAFFIC_SECRET[48]:
+| c6 48 56 c9 5f 29 8b 1c aa e6 0b 3d 81 46 96 0e |.HV._).....=.F..|
+| 70 0b 1d c3 35 4a 3f 46 f0 5c a7 73 62 df 59 9a |p...5J?F.\.sb.Y.|
+| 07 29 70 1a 92 71 65 73 36 0d cd d5 0a a2 8f e4 |.)p..qes6.......|
+tls13_generate_keys CIPHER: AES256
+tls13_generate_keys key_length 32 iv_length 12
+Server Write Key[32]:
+| e1 c4 84 1f 50 28 6c 0b 75 96 7f c4 09 67 fe 11 |....P(l.u....g..|
+| 6f f8 f3 13 5c 6e 76 13 27 05 8e cd 82 c3 c5 ed |o...\nv.'.......|
+Server Write IV[12]:
+| de 1e 5b 12 14 85 49 2e 4a 3a e6 8e             |..[...I.J:..    |
+tls13_generate_keys ssl_create_decoder(server)
+decoder initialized (digest len 48)
+tls13_generate_keys Server ready using cipher suite 0x1302 (cipher AES256 hash SHA384)
+  record: offset = 127, reported_length_remaining = 4466
+dissect_ssl3_record: content_type 20 Change Cipher Spec
+  record: offset = 133, reported_length_remaining = 4460
+dissect_ssl3_record: content_type 23 Application Data
+decrypt_ssl3_record: app_data len 36, ssl state 0x97
+packet_from_server: is from server - TRUE
+decrypt_ssl3_record: using server decoder
+ssl_decrypt_record ciphertext len 36
+Ciphertext[36]:
+| e0 13 08 9a e9 36 89 2a 92 ab 61 b7 2c da a8 54 |.....6.*..a.,..T|
+| 1b b7 da 45 c9 d0 0f 38 79 07 ef 3c ed 0a dd 08 |...E...8y..<....|
+| 73 c3 ea bf                                     |s...            |
+ssl_decrypt_record: allocating 68 bytes for decrypt data (old len 32)
+tls_decrypt_aead_record seq 0
+nonce[12]:
+| de 1e 5b 12 14 85 49 2e 4a 3a e6 8e             |..[...I.J:..    |
+AAD[5]:
+| 17 03 03 00 24                                  |....$           |
+auth_tag(OK)[16]:
+| c9 d0 0f 38 79 07 ef 3c ed 0a dd 08 73 c3 ea bf |...8y..<....s...|
+Plaintext[20]:
+| 08 00 00 0f 00 0d 00 00 00 00 00 10 00 05 00 03 |................|
+| 02 68 32 16                                     |.h2.            |
+tls_save_decrypted_record found 0 padding bytes
+dissect_ssl3_handshake iteration 1 type 8 offset 0 length 15 bytes
+ssl_dissect_hnd_hello_ext_alpn: changing handle 0000000000000000 to 0000022DE826D630 (http2)  record: offset = 174, reported_length_remaining = 4419
+dissect_ssl3_record: content_type 23 Application Data
+decrypt_ssl3_record: app_data len 4054, ssl state 0x97
+packet_from_server: is from server - TRUE
+decrypt_ssl3_record: using server decoder
+ssl_decrypt_record ciphertext len 4054
+Ciphertext[4054]:
+| f4 da 8b 52 0d 94 b9 7b fc 7d b2 ac 08 af 5b 15 |...R...{.}....[.|
+| 2a cf 20 75 c0 22 05 0a ab d7 ec bf 68 46 c6 80 |*. u."......hF..|
+| d3 85 03 c4 f8 ab ba 96 bf a1 43 4c 6a 8f 0f 22 |..........CLj.."|
+| 2e b9 f1 e2 12 36 29 a3 91 a9 c4 33 40 8b 4e f9 |.....6)....3@.N.|
+| 7e 21 58 87 05 71 67 98 94 12 ce 5e 8b d0 c5 12 |~!X..qg....^....|
+| f9 9e dd 38 63 c3 6a a3 87 bf 8d 19 84 41 3c 34 |...8c.j......A<4|
+| 05 7b cb 64 b9 a3 72 0a 79 cd 1f 39 06 27 ab 49 |.{.d..r.y..9.'.I|
+| d5 33 e9 77 03 77 fa b1 ed af 01 a4 6d d4 20 85 |.3.w.w......m. .|
+| 38 e3 65 c6 55 ed 5c e7 98 e7 ad 59 f9 44 fb 55 |8.e.U.\....Y.D.U|
+| d5 8c b9 71 94 37 53 b7 7f a7 e3 91 c2 a8 f6 71 |...q.7S........q|
+| 9f 04 cc 50 31 4e 49 8f 3e 77 85 18 55 5a 74 90 |...P1NI.>w..UZt.|
+| 6a e0 9c 8f 2e 1c b4 b4 5b 52 e1 5f ff cb e5 92 |j.......[R._....|
+| bc 06 c9 19 78 71 20 ff 9f d0 b4 5c 4a 65 58 3f |....xq ....\JeX?|
+| 77 13 c9 f2 49 2d cf 32 64 2c 86 ed 3a d2 60 60 |w...I-.2d,..:.``|
+| 54 1e 83 b9 f1 0a 24 a3 1b 21 4f 34 31 50 60 e2 |T.....$..!O41P`.|
+| 79 0f 6b 64 75 da 91 74 c0 4c 60 15 2f 0e 99 51 |y.kdu..t.L`./..Q|
+| 1d 84 b0 20 18 2c f7 65 b2 13 ca 45 8c 0d 5e a3 |... .,.e...E..^.|
+| 2d 03 2f b6 28 32 a1 9f 1e 98 9f eb 98 0b b9 16 |-./.(2..........|
+| 15 d6 d0 d5 90 41 cc 62 ac af 21 13 6b b2 b3 91 |.....A.b..!.k...|
+| ad f8 07 14 46 c2 2c 3e bd a4 e5 c1 c7 2f 81 05 |....F.,>...../..|
+| d8 38 1b a2 42 b9 4f 46 ea df 88 aa fc 72 19 ef |.8..B.OF.....r..|
+| 77 ed 63 89 c9 f8 2b b2 72 2d 2f 00 0f c9 88 7d |w.c...+.r-/....}|
+| 9f cb 94 54 c0 32 8b f0 61 78 ce 69 e8 cf b7 b8 |...T.2..ax.i....|
+| 86 78 c2 10 0e 97 36 15 0e ef 41 88 3e d3 e4 0c |.x....6...A.>...|
+| d0 ab 5e a2 dd ae 06 8f 60 4b 9c c5 6f 6e 81 ed |..^.....`K..on..|
+| 8d 34 49 c5 46 70 36 eb fc 1f eb 03 49 43 14 6e |.4I.Fp6.....IC.n|
+| c7 5c b9 65 3a 3d 44 55 3c 53 53 b5 3b 44 bb 1b |.\.e:=DU<SS.;D..|
+| bd 4f b2 b2 45 42 fd c1 61 d6 73 2f 23 a4 34 cc |.O..EB..a.s/#.4.|
+| 98 36 b3 a3 97 bb a2 d2 82 d0 da 03 42 2d 4a ea |.6..........B-J.|
+| 0a db 61 1f 3f 0b 17 ce 1f 45 e6 84 e0 62 20 b5 |..a.?....E...b .|
+| 19 c3 2c f7 2d 4d 11 28 f0 eb 98 72 b9 d4 e6 0b |..,.-M.(...r....|
+| b1 2d a3 b1 e6 67 33 d8 fe 71 01 9d 30 30 2a 85 |.-...g3..q..00*.|
+| c8 f5 66 1f 56 fd b7 da 7b 86 da 6c 86 06 e3 d0 |..f.V...{..l....|
+| 62 a9 7b 56 80 40 bb 7a 50 59 90 8b 06 7f 8b 6f |b.{V.@.zPY.....o|
+| 4f f8 68 86 3d 8b 65 e6 4d d5 ad a6 82 7d 38 9c |O.h.=.e.M....}8.|
+| a4 cd a5 a9 0d d3 7a a5 dc 08 19 ac 0a f0 3b a5 |......z.......;.|
+| ff 77 6d 39 6c 77 2d 1a 3e 81 70 14 9b 44 1c 6b |.wm9lw-.>.p..D.k|
+| f8 0f 72 1a 52 07 af 37 ae fc 97 69 f7 cb 12 e9 |..r.R..7...i....|
+| 42 0a a0 b0 4c ad c5 e0 ef 64 27 1e be f4 94 3d |B...L....d'....=|
+| fe 0a e8 6a 1d dd a7 1a 1b e0 6c 26 e6 ca 2f c2 |...j......l&../.|
+| 37 8c d0 07 c8 ec a5 03 81 2e 19 59 15 ff cc eb |7..........Y....|
+| 7c 5d f5 38 a1 e1 3f 33 69 e1 6e 1d 8c d6 5c cd ||].8..?3i.n...\.|
+| eb 1d 1e ac cf ec 72 9a e6 0c 38 7c 6f 57 6b b4 |......r...8|oWk.|
+| 45 2c 30 73 cc 32 f9 f7 d2 5b 52 dd 23 4c 5d 89 |E,0s.2...[R.#L].|
+| d5 73 1b 6f bf 85 1c c4 b6 b9 48 12 1d 4e 98 9e |.s.o......H..N..|
+| 42 f5 4a 19 c1 de d4 2e 52 e8 28 35 f7 b1 32 9c |B.J.....R.(5..2.|
+| f2 a0 a3 2d 99 c9 ff f8 0d 41 1e f5 35 08 d4 b1 |...-.....A..5...|
+| f8 04 57 10 20 23 33 e6 71 5d 16 96 9b 27 93 ff |..W. #3.q]...'..|
+| 40 06 f0 71 b9 14 0a 8d 03 5d fb 12 26 da 5e 2d |@..q.....]..&.^-|
+| 8e f1 e3 8d 49 07 bc 05 90 7e 27 b8 43 eb 91 8a |....I....~'.C...|
+| 6a e1 4f b0 42 7d 02 d7 1f a9 c1 14 2e 94 f1 e3 |j.O.B}..........|
+| 98 17 67 46 41 9f 72 08 08 e4 1d 23 ed 4a 71 a4 |..gFA.r....#.Jq.|
+| 1f fe 06 3a 37 9b 4f 11 2a 80 f5 c6 5a 9c 8e dc |...:7.O.*...Z...|
+| 25 da 11 20 cb 4e 70 22 59 63 c5 ca b1 74 66 89 |%.. .Np"Yc...tf.|
+| 74 ae 21 6a 1e f9 01 9b bb b6 d3 0a 36 e9 2d a7 |t.!j........6.-.|
+| 17 91 17 c6 ea 65 fc 5f 2c 81 a8 e4 fe e6 08 c6 |.....e._,.......|
+| e6 fd fd 65 3d 6d dc 77 76 e9 5e fd e2 39 46 19 |...e=m.wv.^..9F.|
+| ea 19 52 9e c8 55 04 68 a0 40 32 83 09 76 ce 4d |..R..U.h.@2..v.M|
+| 0c f5 04 a3 8d 31 0d 98 a2 79 c1 bc b3 9d 62 05 |.....1...y....b.|
+| a8 04 6b 42 63 ec 8a 2d 2d 9d b5 3a 37 8c c6 cc |..kBc..--..:7...|
+| a8 29 20 ee 14 95 6a a9 ed 87 9e 25 fc ef ee ef |.) ...j....%....|
+| 30 50 a7 bb e0 04 bc 09 c2 63 8f dc 7c 3e 38 2a |0P.......c..|>8*|
+| b2 ff f7 f9 ca 56 c5 1f b3 d6 13 d8 40 1c e1 3b |.....V......@..;|
+| 3f d6 5c c8 58 ef ee 08 12 18 a7 d7 63 6b 7f d5 |?.\.X.......ck..|
+| fb 74 89 72 6e 88 3d f1 15 1c 5d 68 d9 5d da d7 |.t.rn.=...]h.]..|
+| 1a ad 44 a8 0c 4c fe c3 f9 56 1e cc 54 78 10 c4 |..D..L...V..Tx..|
+| 69 42 7a 32 41 f7 a4 16 9f 47 4b 16 33 33 4d f5 |iBz2A....GK.33M.|
+| 59 0b bd 29 07 47 d9 f1 f8 4e b0 74 5b 41 8a a4 |Y..).G...N.t[A..|
+| 40 0c 1e 31 e4 b3 bf 8d 16 a7 f4 ba a3 ef d6 67 |@..1...........g|
+| c6 90 07 6e 7f b6 02 37 d8 96 e0 a8 7f 02 9f 77 |...n...7.......w|
+| 38 c5 fa 8a 35 da eb f2 c9 b7 db 6f 45 62 ae f7 |8...5......oEb..|
+| 2c be 8d 26 32 af 10 5f d2 d2 91 8b 1d 18 53 60 |,..&2.._......S`|
+| 5a 6e 13 5c 19 57 63 e3 8c 52 9a f3 91 56 f0 da |Zn.\.Wc..R...V..|
+| 08 2a f7 40 bc 84 85 bc 0f 05 49 9d d0 0d 10 98 |.*.@......I.....|
+| 0a 69 a2 ad 06 b6 38 ea 84 2b 21 ea e9 84 cc e1 |.i....8..+!.....|
+| 60 f3 ba 18 0a 6e a8 b2 2e 2f 14 89 18 a0 40 66 |`....n.../....@f|
+| 67 03 33 d6 ea 29 7e 8f 2a 67 80 6b 68 01 81 a5 |g.3..)~.*g.kh...|
+| b7 93 3a 4c 31 db a6 f6 da 04 65 0c 81 2f 2c 55 |..:L1.....e../,U|
+| be a5 aa 42 be b5 41 ff 29 51 52 f5 eb c0 a8 7c |...B..A.)QR....||
+| 42 81 9e a4 29 a0 f7 4b 61 32 37 81 d2 eb d2 75 |B...)..Ka27....u|
+| 82 8f 9d ce ad 0c 91 a0 2c af d7 39 1a 4f 8b e0 |........,..9.O..|
+| bf 58 52 2c 15 57 fd df 01 13 fe 84 48 47 ef db |.XR,.W......HG..|
+| 17 b1 d8 3c 11 b0 33 3f a3 1f a2 cb 71 b2 3d 97 |...<..3?....q.=.|
+| 86 32 7c c7 40 02 85 11 ad ae 53 98 74 90 52 8c |.2|.@.....S.t.R.|
+| 8d b0 f9 f5 58 98 c1 90 ce 48 53 76 98 54 93 e7 |....X....HSv.T..|
+| 95 53 fb 95 6d 7a 5b 05 e6 0a 3b c6 0d d8 8d a6 |.S..mz[...;.....|
+| 05 ad ac a3 f9 a7 0f 0a 71 23 67 32 b2 00 31 5a |........q#g2..1Z|
+| 62 b3 8d b0 5a 87 94 79 4a 2c 52 4d ad a6 68 9f |b...Z..yJ,RM..h.|
+| eb 68 d3 8e 17 b1 bb 5d 25 46 d4 b0 b0 73 3f 3c |.h.....]%F...s?<|
+| a3 58 4a 2b 17 90 90 9f fa 53 e4 a6 16 1c ea 5e |.XJ+.....S.....^|
+| 34 d8 2d b6 15 94 c4 d6 29 34 1f 13 e5 a4 18 d9 |4.-.....)4......|
+| 77 8e 76 fa a7 a5 9e fc 98 b7 6d fe a9 e0 f1 68 |w.v.......m....h|
+| de 6e 17 a4 02 05 78 3a 1b 7b 0c 03 50 ff 21 5f |.n....x:.{..P.!_|
+| 12 63 3c f2 b6 33 9a 47 86 60 8b e5 17 17 43 fa |.c<..3.G.`....C.|
+| e8 b3 88 8f 3f 9f 0e 13 05 6e ba 2d f9 46 9d cc |....?....n.-.F..|
+| 5f b1 9f 2d cd 4b 4d d1 8d b9 a9 eb de 37 4f 3e |_..-.KM......7O>|
+| dd 42 7a b7 db 12 b4 b0 da f7 73 12 5a ee 0c 03 |.Bz.......s.Z...|
+| 72 04 6e cc ef a7 f8 a2 71 b7 85 1a ef af 51 5f |r.n.....q.....Q_|
+| e0 eb 0d 07 49 1e 7b 08 64 bf 7e f2 a0 6c 52 de |....I.{.d.~..lR.|
+| c9 56 64 0d 58 04 74 e7 b6 19 e1 b3 9c 7f a1 45 |.Vd.X.t........E|
+| 8c 66 12 05 70 26 b9 39 38 f1 aa 2e af 13 d0 10 |.f..p&.98.......|
+| 2d 1a 3f f6 3d 9e 16 1f a4 44 fa 2c af 85 01 fe |-.?.=....D.,....|
+| 08 d2 9f 94 2d d2 e1 c6 45 35 23 c7 0c a2 d9 2c |....-...E5#....,|
+| b8 16 47 67 f2 48 f3 ba fd bf b6 fb 3a 18 47 9d |..Gg.H......:.G.|
+| 76 ab 3a 06 7b 00 6b 62 4a 37 c9 5f 89 b3 d9 4d |v.:.{.kbJ7._...M|
+| fa 86 ff 48 1b 11 44 b4 cc cc 8d 96 49 d4 37 14 |...H..D.....I.7.|
+| c7 1f 8e 01 19 d4 39 8f da b4 a8 93 d3 96 58 91 |......9.......X.|
+| a9 d1 56 42 34 0d 9e dc 7b 74 ca d2 3a 02 c6 67 |..VB4...{t..:..g|
+| 22 ac fe d7 16 b6 69 57 c9 7c a5 08 38 0e 82 6a |".....iW.|..8..j|
+| b7 15 7b f2 ac 41 a3 77 f1 4d f5 12 42 63 59 dd |..{..A.w.M..BcY.|
+| 9c f2 13 c6 be 5c 94 0a d9 b0 ec 59 09 75 b4 80 |.....\.....Y.u..|
+| d1 50 8e c3 04 0b 87 a3 dd 75 d4 98 88 8c 66 87 |.P.......u....f.|
+| 33 ff 41 c1 39 c0 3b 40 0b 33 5c d7 3c 11 05 85 |3.A.9.;@.3\.<...|
+| 04 f2 53 0e f0 b1 de ee 63 61 ac 95 25 f4 b8 37 |..S.....ca..%..7|
+| 9e df 92 8b 66 1d 26 5e 44 cb 86 5c c0 65 43 18 |....f.&^D..\.eC.|
+| 76 bf 17 6a 3b 05 b3 a1 f0 9d 25 8a 20 7d 0d 34 |v..j;.....%. }.4|
+| b3 92 d8 3d 76 36 cd c3 bf e3 cc b2 55 7a 24 df |...=v6......Uz$.|
+| e1 5f 52 24 7f 1f 20 d9 6f fb 74 de b9 7f 74 a0 |._R$.. .o.t...t.|
+| 74 f3 93 82 1a 4e 20 e7 64 92 f2 65 3a 6f 34 20 |t....N .d..e:o4 |
+| cd bb 9a 12 b9 a3 90 f9 75 24 4f 30 68 ee 9c 61 |........u$O0h..a|
+| 52 69 2f 27 52 44 57 cf 67 61 48 36 c3 a2 38 60 |Ri/'RDW.gaH6..8`|
+| 7b d5 58 99 a3 a0 47 1b 45 53 47 42 f0 90 76 37 |{.X...G.ESGB..v7|
+| 67 5f bc e3 4b 98 3b 0c 8b d6 87 ab b0 4d bc 0d |g_..K.;......M..|
+| 9a d6 72 42 c9 d3 3b 10 3e 74 96 59 63 a7 ed 1e |..rB..;.>t.Yc...|
+| db 3b fb 3c 57 db f0 0e 55 5d 1d bf 33 3e c1 f4 |.;.<W...U]..3>..|
+| da ed dd c4 9a 64 25 68 b7 6a 34 37 4a 76 41 c9 |.....d%h.j47JvA.|
+| 08 88 b2 5e 44 8c 35 79 4e 67 f0 90 7a 8e d0 87 |...^D.5yNg..z...|
+| b8 bf 62 f9 57 93 85 38 3c 4d 0a 05 e1 b8 48 c0 |..b.W..8<M....H.|
+| 9e 16 11 23 70 cc fa bf 3c 73 b2 a9 6a 48 4b 0a |...#p...<s..jHK.|
+| 80 f1 b6 7d 1a 16 a8 31 b7 5d 10 ac f9 df 78 6a |...}...1.]....xj|
+| da de 3e 0b 67 b1 34 f4 3a fd b4 79 8b 0a cf 90 |..>.g.4.:..y....|
+| 55 32 06 6f c5 28 0b de a2 36 b3 f4 5f c8 eb 96 |U2.o.(...6.._...|
+| c8 fb f1 c8 ce 3a b6 31 9d bc c3 0c 81 c9 f0 81 |.....:.1........|
+| b4 3c fa e9 b1 0c 94 43 be ab e5 1e 85 30 90 b8 |.<.....C.....0..|
+| 90 5a 16 05 39 61 17 96 84 20 e6 9d 2f 82 73 31 |.Z..9a... ../.s1|
+| 7c c8 b8 2d c1 31 db f3 8c 4f 6e fd 35 17 43 9f ||..-.1...On.5.C.|
+| f6 ac ea 0e 50 a6 ca e1 01 44 09 e8 ce c0 a9 d4 |....P....D......|
+| 8a 2e 06 23 41 e4 0c a6 9c fc 2f d0 43 3a 80 4e |...#A...../.C:.N|
+| 03 36 ef 30 c7 a9 34 6a c0 d3 3a f9 87 54 fe 54 |.6.0..4j..:..T.T|
+| 3d ce fc 51 be 2e 0a df 2f a1 40 0f cd 72 71 1e |=..Q..../.@..rq.|
+| 32 43 20 c1 5f db 21 32 08 83 2a b5 9c 4b 00 4b |2C ._.!2..*..K.K|
+| 4f b8 2c b1 70 f4 00 5c b0 d6 f4 d6 b1 d1 d0 37 |O.,.p..\.......7|
+| 38 79 dc 82 c2 9f dd 67 12 21 53 bf 6f b7 24 62 |8y.....g.!S.o.$b|
+| 6d e1 5a 6e f6 2d 80 e8 29 3e 18 65 0f 9b 87 d1 |m.Zn.-..)>.e....|
+| d3 91 35 4c 1a 9e bd 2b 8c 02 1e 5d ef 21 dc 7a |..5L...+...].!.z|
+| 59 39 d1 0f e8 d5 ae 08 c8 1b 95 79 00 47 32 55 |Y9.........y.G2U|
+| c0 d1 56 a0 e4 6e 1b 36 3c cd 5e 36 d1 e4 3c 37 |..V..n.6<.^6..<7|
+| a7 cf ac 26 c8 e1 04 5d 38 ca a6 38 b3 6f 20 00 |...&...]8..8.o .|
+| b8 a2 a6 b9 9e 8f 4b 10 db ea 30 27 cc d7 b2 0a |......K...0'....|
+| 30 7b ee 88 77 d0 91 e2 5d 7e ed bd 92 0a 9b f0 |0{..w...]~......|
+| 8a 59 91 fb ae 40 df bf 21 1d 47 0e 6e 6f c2 7f |.Y...@..!.G.no..|
+| 4d f6 88 13 95 1e 45 5e 7a a0 85 50 43 b3 36 8c |M.....E^z..PC.6.|
+| 11 16 31 c3 ee fa a3 27 23 51 22 34 09 94 f4 43 |..1....'#Q"4...C|
+| 5b ff de d6 ec df 32 5a e8 ef 9a 32 2e e9 e7 da |[.....2Z...2....|
+| d7 ce 50 0c 7a 1c 54 c8 f4 d3 10 c6 44 13 3c 14 |..P.z.T.....D.<.|
+| c6 cc 34 5c 96 3e fb d1 7c ad 00 e9 c3 6a 41 7b |..4\.>..|....jA{|
+| 4e 2f cd 18 08 fb 2a fa 0f 85 6b 8c a8 55 37 37 |N/....*...k..U77|
+| da 11 53 5f 83 41 79 97 df 91 f7 6e 6f c3 ad 1c |..S_.Ay....no...|
+| 92 6f e3 b6 de 29 e4 d1 67 fe 88 7a 71 68 f7 10 |.o...)..g..zqh..|
+| 57 c3 39 46 77 af ee b5 44 5b 2d 1b e0 80 ee 55 |W.9Fw...D[-....U|
+| fa 99 2a 09 db e3 79 32 b5 54 ab d6 9d 50 08 81 |..*...y2.T...P..|
+| 12 63 9d 0c ac af 06 e1 9c d1 cd a9 1f c6 f2 43 |.c.............C|
+| e0 21 0b 8c d7 ef 80 73 df 1a 85 84 be 2e 58 e8 |.!.....s......X.|
+| 64 c2 63 82 55 db 18 57 4a e4 42 da 91 89 7f 5a |d.c.U..WJ.B....Z|
+| 2d cf 60 dd 68 3b cf 8e 25 49 50 44 1d 19 6c 3c |-.`.h;..%IPD..l<|
+| 0b 99 88 31 53 71 7f 8e 69 3c 4d b0 77 3f ad 20 |...1Sq..i<M.w?. |
+| 9b 42 16 23 d5 73 3c 8b 1c 33 dd 69 11 fe 86 c0 |.B.#.s<..3.i....|
+| d4 64 30 76 0a 1f 05 92 de e6 26 cd d9 ac 0e 9c |.d0v......&.....|
+| df 51 22 b2 9f b5 d0 c7 a2 75 60 74 4d 0c d5 ce |.Q"......u`tM...|
+| bf ff 2e 57 f5 06 22 1a 17 d0 c3 28 ce 58 06 30 |...W.."....(.X.0|
+| 40 db e5 15 42 5d f7 d5 6e 23 76 d7 cf 81 f7 21 |@...B]..n#v....!|
+| 55 c6 d7 6f 42 c1 08 7b 06 eb 82 7f 24 b4 f5 59 |U..oB..{....$..Y|
+| 6c fe 54 10 44 bc 3a a9 8c 1a 07 60 f5 4c c9 62 |l.T.D.:....`.L.b|
+| 27 17 e1 21 50 8a b9 88 23 ae 00 8e c3 e1 9f 2a |'..!P...#......*|
+| b9 f4 06 98 c5 6f 8f a8 5a 49 43 a4 3f b3 11 1b |.....o..ZIC.?...|
+| ac 53 48 9a 6b bf a9 58 2d 2a 23 74 a3 45 7f 1c |.SH.k..X-*#t.E..|
+| 8b b2 1e ce 02 e4 26 27 63 8e 74 e7 c2 d2 5f d0 |......&'c.t..._.|
+| 9c d2 8b 50 38 49 5a de aa 53 5d 98 28 ca de 2d |...P8IZ..S].(..-|
+| 96 a1 96 57 4c 9e a7 59 db da 83 f4 b1 66 db d6 |...WL..Y.....f..|
+| 16 c2 21 45 1e 54 ce 1f b0 a5 77 d9 27 e7 a6 83 |..!E.T....w.'...|
+| 9c d9 5f 84 c9 af 06 09 95 52 85 d8 31 4d 3d f4 |.._......R..1M=.|
+| 1c cb ea e5 8f 37 2c f1 2f ab f3 34 c2 ee 70 5f |.....7,./..4..p_|
+| 7e df b6 54 fa 04 33 e6 92 26 e1 48 3a fd d3 01 |~..T..3..&.H:...|
+| fd 01 94 4f 4e f1 07 0f 5f 03 d2 5a b3 2d f0 d7 |...ON..._..Z.-..|
+| 65 f0 98 4e 87 18 b1 23 6d 74 c6 ae 33 4d 35 d9 |e..N...#mt..3M5.|
+| 3c e6 98 65 a7 50 cb 50 e9 66 dc 59 a6 aa 3d 51 |<..e.P.P.f.Y..=Q|
+| be a3 cf cb 22 d7 6d 94 d4 7f c8 f3 60 35 e2 20 |....".m.....`5. |
+| b6 95 e9 93 cb 36 34 a5 79 65 38 c4 98 c8 76 28 |.....64.ye8...v(|
+| 9c 17 1c 3a 85 06 ff 7a 5f 50 ce 71 ab 4c 42 21 |...:...z_P.q.LB!|
+| f0 e9 97 fb be df ec 26 32 01 63 1d ec 96 23 30 |.......&2.c...#0|
+| 69 d9 01 2f f8 97 28 a9 d8 f8 b6 ea 70 91 6a ad |i../..(.....p.j.|
+| b4 53 3f c3 7b cf f8 eb 13 fc b6 e1 70 94 fd 38 |.S?.{.......p..8|
+| 5e 09 e7 ab e0 85 51 63 c0 86 93 84 fe ce f1 2b |^.....Qc.......+|
+| 47 7e 55 ee 84 3c e7 56 ef 2a 7f cf 63 e6 31 fe |G~U..<.V.*..c.1.|
+| 36 14 15 48 a9 c6 12 2e 92 09 f9 c9 32 70 86 9d |6..H........2p..|
+| 14 b5 64 a7 e9 39 88 8f 42 89 6b 33 0f 9b 6d 86 |..d..9..B.k3..m.|
+| 09 86 29 73 7c fd a4 4e 5c 24 e8 74 31 f7 da 5d |..)s|..N\$.t1..]|
+| 07 12 0a bd 18 1e c9 3d 2f 95 54 4e 00 1c 8f 04 |.......=/.TN....|
+| c5 cd 04 2b a4 9d 84 76 3b ca 60 85 33 7b 9c 8a |...+...v;.`.3{..|
+| d1 16 36 80 a2 a3 b2 12 db 58 04 5b d1 b7 3f f0 |..6......X.[..?.|
+| 75 5b 27 15 4a 42 27 d6 36 64 89 0d c0 65 1f ee |u['.JB'.6d...e..|
+| b1 fd 1d 1c 18 c4 59 ab 16 4c e1 96 83 f6 f1 75 |......Y..L.....u|
+| 39 f1 01 d3 6a 13 24 bd 05 b5 e1 43 d9 86 1c 74 |9...j.$....C...t|
+| 68 05 da d0 87 93 57 a5 24 61 82 4c 41 a9 a6 02 |h.....W.$a.LA...|
+| 48 64 ab 0a 64 a9 6f ce 54 05 c8 53 fc a6 ce 89 |Hd..d.o.T..S....|
+| 8e 3c 3e 16 f2 72 13 cf 9c df 44 24 33 f6 64 cb |.<>..r....D$3.d.|
+| cd 12 0c 31 b2 05 f5 38 5c 5b cf f2 ec 29 94 f6 |...1...8\[...)..|
+| 7a e7 53 32 00 b2 ff ab ec 92 11 f1 3d 92 ae 53 |z.S2........=..S|
+| fa 74 69 1c d6 24 21 86 07 e6 78 b1 6d 28 69 ab |.ti..$!...x.m(i.|
+| 08 be 5f 18 24 ac c6 37 5a 5d 0f a7 95 a5 b0 d5 |.._.$..7Z]......|
+| 91 7d 70 5e cf a1 21 f6 f7 95 54 8f d7 b9 ed 7f |.}p^..!...T.....|
+| 07 52 15 3e e1 d9 7d d0 5e 89 e4 c5 aa 94 02 7b |.R.>..}.^......{|
+| 63 c3 84 84 3a 61 10 92 d8 6f 6e 5a 12 af b8 c3 |c...:a...onZ....|
+| 2a 00 28 20 03 c6 3e df c9 fa 27 c8 db 56 54 52 |*.( ..>...'..VTR|
+| 35 bd 03 ac 36 3c 87 08 ea fa d8 da 0e 7d e3 69 |5...6<.......}.i|
+| 03 30 77 37 7a d8 3a 73 71 a9 5e 04 1b 09 e2 0a |.0w7z.:sq.^.....|
+| 92 9e 4b aa ab 6b 62 01 57 81 0d 7f d9 ed 46 7f |..K..kb.W.....F.|
+| e8 52 2b 0f 78 c5 15 c2 50 8b 86 40 3f 50 a7 f9 |.R+.x...P..@?P..|
+| 43 b5 4d 1e e7 8a 29 c9 77 09 0f c5 c9 0d a3 cd |C.M...).w.......|
+| 0e 88 af 93 c5 e6 0e 42 1e cd e1 9a dc 8d 21 1f |.......B......!.|
+| 30 16 93 ff 90 d0 c1 32 7a cd ea 1a cf 36 2e 03 |0......2z....6..|
+| 33 4a 6f 3b 54 f4 eb e7 b6 57 10 04 2a 39 05 07 |3Jo;T....W..*9..|
+| 8e 5e 99 a2 00 f7 b8 f0 0d b2 4f 47 9b 8b ef d5 |.^........OG....|
+| 80 c1 d5 a5 a2 d2 52 1c 54 3a 5f 1f 31 c9 26 ef |......R.T:_.1.&.|
+| 20 c7 aa 76 d6 c8 ae de 16 a7 24 82 00 09 08 a0 | ..v......$.....|
+| 25 23 bd 7f f2 f3 03 0b 00 0d a6 e4 5d 28 c9 93 |%#..........](..|
+| 04 49 bf 3a cd 3c 5d ac c2 07 39 eb d0 e9 70 71 |.I.:.<]...9...pq|
+| a5 fb 83 45 c2 e7 44 54 3f ac e8 71 81 e7 ed 8d |...E..DT?..q....|
+| 3f 1f 8c 5e d0 72 6a 9d db 96 e1 b5 4f 95 6b 69 |?..^.rj.....O.ki|
+| 36 89 32 e6 e4 23 15 30 80 1b 3e 6f 0c 4b 26 35 |6.2..#.0..>o.K&5|
+| 8b ec 7b 2f 40 0d a9 5b 4c 64 76 e8 33 16 94 34 |..{/@..[Ldv.3..4|
+| 83 73 5f 7d d7 b2 7c 58 71 5c 06 8d 58 3e 0e 8b |.s_}..|Xq\..X>..|
+| de 16 d8 45 55 1d 69 bd 7d 5c 1a 1a ba f1 21 16 |...EU.i.}\....!.|
+| f7 d0 19 59 d3 86 03 32 43 6f b1 2e 4e f0 a5 5f |...Y...2Co..N.._|
+| 8b 29 f5 80 63 85 6d bc 04 af 39 be 70 3c 3b 38 |.)..c.m...9.p<;8|
+| a8 a4 9d 7a 68 a8 e5 e3 3a bc 6d 34 97 5c 25 26 |...zh...:.m4.\%&|
+| e2 88 be 16 0b d9 b3 7c df c6 14 d1 4c f7 2a 38 |.......|....L.*8|
+| 6e 38 0d 29 0c ad aa a4 5b 01 fa 90 de c8 ae 4a |n8.)....[......J|
+| 8f 2d 51 39 7c 68 74 6d 8e bf 3d 5c 6d 6f fc f9 |.-Q9|htm..=\mo..|
+| e9 80 1b 74 26 06 3d 79 f9 bb 87 33 fc fc 63 79 |...t&.=y...3..cy|
+| f9 0a 33 c8 f1 84 3f fb 74 48 d0 85 e8 99 d3 91 |..3...?.tH......|
+| 40 58 97 19 c0 ab 89 e9 42 66 b8 2f cd 72 97 29 |@X......Bf./.r.)|
+| 12 bc 96 db 4b 2f a1 90 1e 10 bc eb f7 2b b1 7e |....K/.......+.~|
+| 42 c0 9d ff 83 59 27 8a 1a 8b 85 c2 e3 44 29 10 |B....Y'......D).|
+| b6 d2 7a 5b 94 4a 78 3a 29 e0 89 eb 1c a4 22 d7 |..z[.Jx:).....".|
+| f2 85 fe 94 c4 f5 eb f7 16 06 8b 20 02 15 b5 55 |........... ...U|
+| 59 7f 43 ac 5e a0 5d 11 09 8b 01 bd 08 79 87 ce |Y.C.^.]......y..|
+| 7d ab 1e ca d0 3f 2a 4f 7a 2c 98 aa 2a 59 48 f4 |}....?*Oz,..*YH.|
+| 9b f9 7b f0 bd f3 1a 7a 32 5a b0 81 8b 70 35 f7 |..{....z2Z...p5.|
+| 3e 81 69 7d fd 54 67 ce 9b c1 f3 a1 8e 74 19 90 |>.i}.Tg......t..|
+| 9e 15 1c d7 bd 9d 2e df 9c d8 ab ce 2a f5 3a 80 |............*.:.|
+| 70 d7 28 9d 36 a8 30 98 13 08 09 a2 a5 09 d0 8b |p.(.6.0.........|
+| e0 22 f2 4e fd 86 5c 8f a4 d9 5a 84 35 d1 96 e4 |.".N..\...Z.5...|
+| 16 84 54 5e c2 97                               |..T^..          |
+ssl_decrypt_record: allocating 4086 bytes for decrypt data (old len 68)
+tls_decrypt_aead_record seq 1
+nonce[12]:
+| de 1e 5b 12 14 85 49 2e 4a 3a e6 8f             |..[...I.J:..    |
+AAD[5]:
+| 17 03 03 0f d6                                  |.....           |
+auth_tag(OK)[16]:
+| 5c 8f a4 d9 5a 84 35 d1 96 e4 16 84 54 5e c2 97 |\...Z.5.....T^..|
+Plaintext[4038]:
+| 0b 00 0f c1 00 00 0f bd 00 05 30 30 82 05 2c 30 |..........00..,0|
+| 82 04 14 a0 03 02 01 02 02 12 04 d1 03 c9 98 b0 |................|
+| 27 fd 2a 4f fe cc 12 56 f0 a8 9d 5f 30 0d 06 09 |'.*O...V..._0...|
+| 2a 86 48 86 f7 0d 01 01 0b 05 00 30 32 31 0b 30 |*.H........021.0|
+| 09 06 03 55 04 06 13 02 55 53 31 16 30 14 06 03 |...U....US1.0...|
+| 55 04 0a 13 0d 4c 65 74 27 73 20 45 6e 63 72 79 |U....Let's Encry|
+| 70 74 31 0b 30 09 06 03 55 04 03 13 02 52 33 30 |pt1.0...U....R30|
+| 1e 17 0d 32 32 31 32 30 32 30 32 33 39 30 36 5a |...221202023906Z|
+| 17 0d 32 33 30 33 30 32 30 32 33 39 30 35 5a 30 |..230302023905Z0|
+| 1e 31 1c 30 1a 06 03 55 04 03 13 13 74 6c 73 33 |.1.0...U....tls3|
+| 2e 63 72 79 70 74 6f 68 61 63 6b 2e 6f 72 67 30 |.cryptohack.org0|
+| 82 01 22 30 0d 06 09 2a 86 48 86 f7 0d 01 01 01 |.."0...*.H......|
+| 05 00 03 82 01 0f 00 30 82 01 0a 02 82 01 01 00 |.......0........|
+| ad 3a ff f3 70 d5 4e f8 2a f7 4f f2 36 65 fd 87 |.:..p.N.*.O.6e..|
+| 44 0b 48 26 ac 9f 04 05 f8 68 f1 a5 bf 0f d7 67 |D.H&.....h.....g|
+| 8e 45 fd da 9f 84 50 a7 b2 b1 fc cb 08 8e 4f 9f |.E....P.......O.|
+| 6d c2 d9 15 d3 e3 ca f3 d7 f9 3b 32 8a 39 ae c0 |m.........;2.9..|
+| e4 d7 b3 7a 52 67 97 25 8d 74 04 40 77 b1 98 7c |...zRg.%.t.@w..||
+| c6 4b 21 f0 0c 45 70 fc b2 3e b8 47 a9 ef 8e 45 |.K!..Ep..>.G...E|
+| 50 58 17 23 f0 86 d1 f2 aa aa 49 22 e5 74 55 a2 |PX.#......I".tU.|
+| 44 b4 7d e1 bb 85 64 b4 50 cf 4a a2 a4 35 a3 f9 |D.}...d.P.J..5..|
+| fc c9 e9 2e 8f c7 48 08 10 e0 67 5c 95 c2 cc 3d |......H...g\...=|
+| 4f 91 b1 09 69 4d 73 e3 33 ae 6e ee 28 eb ba 7f |O...iMs.3.n.(...|
+| 02 41 b5 6a d9 21 67 99 d7 8f 1c 79 cd 98 61 c6 |.A.j.!g....y..a.|
+| d5 a3 25 bc 65 a9 bf 7e ab b8 30 96 d4 39 59 ed |..%.e..~..0..9Y.|
+| 71 1d 1e 47 a5 62 17 f3 b3 d6 c2 85 1b f8 dd 52 |q..G.b.........R|
+| b1 be 76 5e b5 bf f2 0d 30 9b ec 29 37 3c d8 2e |..v^....0..)7<..|
+| 56 44 57 74 da e5 ca a5 3e 86 db 22 5b b6 f6 70 |VDWt....>.."[..p|
+| e2 32 fc 72 8d 8d 58 16 a1 e5 83 98 bd 49 f7 ff |.2.r..X......I..|
+| 02 03 01 00 01 a3 82 02 4e 30 82 02 4a 30 0e 06 |........N0..J0..|
+| 03 55 1d 0f 01 01 ff 04 04 03 02 05 a0 30 1d 06 |.U...........0..|
+| 03 55 1d 25 04 16 30 14 06 08 2b 06 01 05 05 07 |.U.%..0...+.....|
+| 03 01 06 08 2b 06 01 05 05 07 03 02 30 0c 06 03 |....+.......0...|
+| 55 1d 13 01 01 ff 04 02 30 00 30 1d 06 03 55 1d |U.......0.0...U.|
+| 0e 04 16 04 14 71 48 21 41 6a 3c 5c d2 6c e2 24 |.....qH!Aj<\.l.$|
+| e5 15 9f a3 15 56 f4 7b fd 30 1f 06 03 55 1d 23 |.....V.{.0...U.#|
+| 04 18 30 16 80 14 14 2e b3 17 b7 58 56 cb ae 50 |..0........XV..P|
+| 09 40 e6 1f af 9d 8b 14 c2 c6 30 55 06 08 2b 06 |.@........0U..+.|
+| 01 05 05 07 01 01 04 49 30 47 30 21 06 08 2b 06 |.......I0G0!..+.|
+| 01 05 05 07 30 01 86 15 68 74 74 70 3a 2f 2f 72 |....0...http://r|
+| 33 2e 6f 2e 6c 65 6e 63 72 2e 6f 72 67 30 22 06 |3.o.lencr.org0".|
+| 08 2b 06 01 05 05 07 30 02 86 16 68 74 74 70 3a |.+.....0...http:|
+| 2f 2f 72 33 2e 69 2e 6c 65 6e 63 72 2e 6f 72 67 |//r3.i.lencr.org|
+| 2f 30 1e 06 03 55 1d 11 04 17 30 15 82 13 74 6c |/0...U....0...tl|
+| 73 33 2e 63 72 79 70 74 6f 68 61 63 6b 2e 6f 72 |s3.cryptohack.or|
+| 67 30 4c 06 03 55 1d 20 04 45 30 43 30 08 06 06 |g0L..U. .E0C0...|
+| 67 81 0c 01 02 01 30 37 06 0b 2b 06 01 04 01 82 |g.....07..+.....|
+| df 13 01 01 01 30 28 30 26 06 08 2b 06 01 05 05 |.....0(0&..+....|
+| 07 02 01 16 1a 68 74 74 70 3a 2f 2f 63 70 73 2e |.....http://cps.|
+| 6c 65 74 73 65 6e 63 72 79 70 74 2e 6f 72 67 30 |letsencrypt.org0|
+| 82 01 04 06 0a 2b 06 01 04 01 d6 79 02 04 02 04 |.....+.....y....|
+| 81 f5 04 81 f2 00 f0 00 76 00 ad f7 be fa 7c ff |........v.....|.|
+| 10 c8 8b 9d 3d 9c 1e 3e 18 6a b4 67 29 5d cf b1 |....=..>.j.g)]..|
+| 0c 24 ca 85 86 34 eb dc 82 8a 00 00 01 84 d0 ea |.$...4..........|
+| 99 bc 00 00 04 03 00 47 30 45 02 21 00 aa 23 17 |.......G0E.!..#.|
+| fb a6 74 bc 52 e5 7f 8b 19 92 84 95 b9 3e d4 56 |..t.R........>.V|
+| dd 8c 2a 1e c6 e6 16 e5 21 fb 34 17 1a 02 20 01 |..*.....!.4... .|
+| 7d cb 94 4d e4 e4 5e 03 8a 01 29 11 0f 6d 77 60 |}..M..^...)..mw`|
+| 7b 2c b4 1d 14 6b b0 96 9e c9 07 cb 02 d1 39 00 |{,...k........9.|
+| 76 00 b7 3e fb 24 df 9c 4d ba 75 f2 39 c5 ba 58 |v..>.$..M.u.9..X|
+| f4 6c 5d fc 42 cf 7a 9f 35 c4 9e 1d 09 81 25 ed |.l].B.z.5.....%.|
+| b4 99 00 00 01 84 d0 ea 9b 12 00 00 04 03 00 47 |...............G|
+| 30 45 02 20 38 a6 10 7a be 9d 1a 39 a9 19 0f 3b |0E. 8..z...9...;|
+| 9e de 5d e3 fb d1 7b 1f f8 03 30 70 6c 47 be ec |..]...{...0plG..|
+| 35 dc a5 1c 02 21 00 94 b5 9f a6 1a 68 15 08 f9 |5....!......h...|
+| a4 85 57 25 80 e1 d0 52 ff 35 92 37 2f f3 4d a1 |..W%...R.5.7/.M.|
+| 3e 1b 74 28 89 f6 7b 30 0d 06 09 2a 86 48 86 f7 |>.t(..{0...*.H..|
+| 0d 01 01 0b 05 00 03 82 01 01 00 61 e8 6f 52 2b |...........a.oR+|
+| dd a3 da 6d be e0 1e cd 18 77 2c 48 a5 32 b5 e9 |...m.....w,H.2..|
+| 80 57 97 eb 05 95 16 d8 57 60 83 3f e4 99 ae 50 |.W......W`.?...P|
+| d8 f2 18 ba 76 13 16 0e 71 11 f1 83 f2 5d 0b a6 |....v...q....]..|
+| 7d 99 67 ea 3b 3b 5a 04 8a fe 4c ff 39 cd c9 75 |}.g.;;Z...L.9..u|
+| b3 eb 96 f1 32 93 e3 30 ac 08 cf a7 96 d5 f4 1f |....2..0........|
+| 46 6e a9 12 26 c5 f0 e9 51 f8 b2 c3 32 d4 3c 10 |Fn..&...Q...2.<.|
+| 27 0d b3 d8 e8 3e 2a 07 c5 4b f9 0c 4b 6e 1e 29 |'....>*..K..Kn.)|
+| 44 87 71 de 53 b5 a0 54 20 64 a2 86 8f 0e d4 af |D.q.S..T d......|
+| b5 3c ca 41 9d c1 83 d0 8e de 4b cd 30 16 ee 47 |.<.A......K.0..G|
+| b8 88 da 2f 1d f9 55 c2 6c e9 35 d2 77 71 ae f9 |.../..U.l.5.wq..|
+| d4 2e 05 1d 24 45 76 37 9f f0 ec 7b 4e fb 82 5a |....$Ev7...{N..Z|
+| a6 ef c5 54 39 6f af 25 06 59 8d fb 57 71 85 71 |...T9o.%.Y..Wq.q|
+| 10 b1 2c e8 f4 d3 f1 7a 38 45 61 2b 7f 27 03 6a |..,....z8Ea+.'.j|
+| 1e 21 75 2f 6f da 79 67 59 56 c8 04 b6 b8 b7 80 |.!u/o.ygYV......|
+| dd a7 8c db c0 78 a0 53 34 5e d1 f2 05 02 99 89 |.....x.S4^......|
+| 62 d8 ed 47 bf 15 4f bc 02 1d 5a 00 00 00 05 1a |b..G..O...Z.....|
+| 30 82 05 16 30 82 02 fe a0 03 02 01 02 02 11 00 |0...0...........|
+| 91 2b 08 4a cf 0c 18 a7 53 f6 d6 2e 25 a7 5f 5a |.+.J....S...%._Z|
+| 30 0d 06 09 2a 86 48 86 f7 0d 01 01 0b 05 00 30 |0...*.H........0|
+| 4f 31 0b 30 09 06 03 55 04 06 13 02 55 53 31 29 |O1.0...U....US1)|
+| 30 27 06 03 55 04 0a 13 20 49 6e 74 65 72 6e 65 |0'..U... Interne|
+| 74 20 53 65 63 75 72 69 74 79 20 52 65 73 65 61 |t Security Resea|
+| 72 63 68 20 47 72 6f 75 70 31 15 30 13 06 03 55 |rch Group1.0...U|
+| 04 03 13 0c 49 53 52 47 20 52 6f 6f 74 20 58 31 |....ISRG Root X1|
+| 30 1e 17 0d 32 30 30 39 30 34 30 30 30 30 30 30 |0...200904000000|
+| 5a 17 0d 32 35 30 39 31 35 31 36 30 30 30 30 5a |Z..250915160000Z|
+| 30 32 31 0b 30 09 06 03 55 04 06 13 02 55 53 31 |021.0...U....US1|
+| 16 30 14 06 03 55 04 0a 13 0d 4c 65 74 27 73 20 |.0...U....Let's |
+| 45 6e 63 72 79 70 74 31 0b 30 09 06 03 55 04 03 |Encrypt1.0...U..|
+| 13 02 52 33 30 82 01 22 30 0d 06 09 2a 86 48 86 |..R30.."0...*.H.|
+| f7 0d 01 01 01 05 00 03 82 01 0f 00 30 82 01 0a |............0...|
+| 02 82 01 01 00 bb 02 15 28 cc f6 a0 94 d3 0f 12 |........(.......|
+| ec 8d 55 92 c3 f8 82 f1 99 a6 7a 42 88 a7 5d 26 |..U.......zB..]&|
+| aa b5 2b b9 c5 4c b1 af 8e 6b f9 75 c8 a3 d7 0f |..+..L...k.u....|
+| 47 94 14 55 35 57 8c 9e a8 a2 39 19 f5 82 3c 42 |G..U5W....9...<B|
+| a9 4e 6e f5 3b c3 2e db 8d c0 b0 5c f3 59 38 e7 |.Nn.;......\.Y8.|
+| ed cf 69 f0 5a 0b 1b be c0 94 24 25 87 fa 37 71 |..i.Z.....$%..7q|
+| b3 13 e7 1c ac e1 9b ef db e4 3b 45 52 45 96 a9 |..........;ERE..|
+| c1 53 ce 34 c8 52 ee b5 ae ed 8f de 60 70 e2 a5 |.S.4.R......`p..|
+| 54 ab b6 6d 0e 97 a5 40 34 6b 2b d3 bc 66 eb 66 |T..m...@4k+..f.f|
+| 34 7c fa 6b 8b 8f 57 29 99 f8 30 17 5d ba 72 6f |4|.k..W)..0.].ro|
+| fb 81 c5 ad d2 86 58 3d 17 c7 e7 09 bb f1 2b f7 |......X=......+.|
+| 86 dc c1 da 71 5d d4 46 e3 cc ad 25 c1 88 bc 60 |....q].F...%...`|
+| 67 75 66 b3 f1 18 f7 a2 5c e6 53 ff 3a 88 b6 47 |guf.....\.S.:..G|
+| a5 ff 13 18 ea 98 09 77 3f 9d 53 f9 cf 01 e5 f5 |.......w?.S.....|
+| a6 70 17 14 af 63 a4 ff 99 b3 93 9d dc 53 a7 06 |.p...c.......S..|
+| fe 48 85 1d a1 69 ae 25 75 bb 13 cc 52 03 f5 ed |.H...i.%u...R...|
+| 51 a1 8b db 15 02 03 01 00 01 a3 82 01 08 30 82 |Q.............0.|
+| 01 04 30 0e 06 03 55 1d 0f 01 01 ff 04 04 03 02 |..0...U.........|
+| 01 86 30 1d 06 03 55 1d 25 04 16 30 14 06 08 2b |..0...U.%..0...+|
+| 06 01 05 05 07 03 02 06 08 2b 06 01 05 05 07 03 |.........+......|
+| 01 30 12 06 03 55 1d 13 01 01 ff 04 08 30 06 01 |.0...U.......0..|
+| 01 ff 02 01 00 30 1d 06 03 55 1d 0e 04 16 04 14 |.....0...U......|
+| 14 2e b3 17 b7 58 56 cb ae 50 09 40 e6 1f af 9d |.....XV..P.@....|
+| 8b 14 c2 c6 30 1f 06 03 55 1d 23 04 18 30 16 80 |....0...U.#..0..|
+| 14 79 b4 59 e6 7b b6 e5 e4 01 73 80 08 88 c8 1a |.y.Y.{....s.....|
+| 58 f6 e9 9b 6e 30 32 06 08 2b 06 01 05 05 07 01 |X...n02..+......|
+| 01 04 26 30 24 30 22 06 08 2b 06 01 05 05 07 30 |..&0$0"..+.....0|
+| 02 86 16 68 74 74 70 3a 2f 2f 78 31 2e 69 2e 6c |...http://x1.i.l|
+| 65 6e 63 72 2e 6f 72 67 2f 30 27 06 03 55 1d 1f |encr.org/0'..U..|
+| 04 20 30 1e 30 1c a0 1a a0 18 86 16 68 74 74 70 |. 0.0.......http|
+| 3a 2f 2f 78 31 2e 63 2e 6c 65 6e 63 72 2e 6f 72 |://x1.c.lencr.or|
+| 67 2f 30 22 06 03 55 1d 20 04 1b 30 19 30 08 06 |g/0"..U. ..0.0..|
+| 06 67 81 0c 01 02 01 30 0d 06 0b 2b 06 01 04 01 |.g.....0...+....|
+| 82 df 13 01 01 01 30 0d 06 09 2a 86 48 86 f7 0d |......0...*.H...|
+| 01 01 0b 05 00 03 82 02 01 00 85 ca 4e 47 3e a3 |............NG>.|
+| f7 85 44 85 bc d5 67 78 b2 98 63 ad 75 4d 1e 96 |..D...gx..c.uM..|
+| 3d 33 65 72 54 2d 81 a0 ea c3 ed f8 20 bf 5f cc |=3erT-...... ._.|
+| b7 70 00 b7 6e 3b f6 5e 94 de e4 20 9f a6 ef 8b |.p..n;.^... ....|
+| b2 03 e7 a2 b5 16 3c 91 ce b4 ed 39 02 e7 7c 25 |......<....9..|%|
+| 8a 47 e6 65 6e 3f 46 f4 d9 f0 ce 94 2b ee 54 ce |.G.en?F.....+.T.|
+| 12 bc 8c 27 4b b8 c1 98 2f a2 af cd 71 91 4a 08 |...'K.../...q.J.|
+| b7 c8 b8 23 7b 04 2d 08 f9 08 57 3e 83 d9 04 33 |...#{.-...W>...3|
+| 0a 47 21 78 09 82 27 c3 2a c8 9b b9 ce 5c f2 64 |.G!x..'.*....\.d|
+| c8 c0 be 79 c0 4f 8e 6d 44 0c 5e 92 bb 2e f7 8b |...y.O.mD.^.....|
+| 10 e1 e8 1d 44 29 db 59 20 ed 63 b9 21 f8 12 26 |....D).Y .c.!..&|
+| 94 93 57 a0 1d 65 04 c1 0a 22 ae 10 0d 43 97 a1 |..W..e..."...C..|
+| 18 1f 7e e0 e0 86 37 b5 5a b1 bd 30 bf 87 6e 2b |..~...7.Z..0..n+|
+| 2a ff 21 4e 1b 05 c3 f5 18 97 f0 5e ac c3 a5 b8 |*.!N.......^....|
+| 6a f0 2e bc 3b 33 b9 ee 4b de cc fc e4 af 84 0b |j...;3..K.......|
+| 86 3f c0 55 43 36 f6 68 e1 36 17 6a 8e 99 d1 ff |.?.UC6.h.6.j....|
+| a5 40 a7 34 b7 c0 d0 63 39 35 39 75 6e f2 ba 76 |.@.4...c959un..v|
+| c8 93 02 e9 a9 4b 6c 17 ce 0c 02 d9 bd 81 fb 9f |.....Kl.........|
+| b7 68 d4 06 65 b3 82 3d 77 53 f8 8e 79 03 ad 0a |.h..e..=wS..y...|
+| 31 07 75 2a 43 d8 55 97 72 c4 29 0e f7 c4 5d 4e |1.u*C.U.r.)...]N|
+| c8 ae 46 84 30 d7 f2 85 5f 18 a1 79 bb e7 5e 70 |..F.0..._..y..^p|
+| 8b 07 e1 86 93 c3 b9 8f dc 61 71 25 2a af df ed |.........aq%*...|
+| 25 50 52 68 8b 92 dc e5 d6 b5 e3 da 7d d0 87 6c |%PRh........}..l|
+| 84 21 31 ae 82 f5 fb b9 ab c8 89 17 3d e1 4c e5 |.!1.........=.L.|
+| 38 0e f6 bd 2b bd 96 81 14 eb d5 db 3d 20 a7 7e |8...+.......= .~|
+| 59 d3 e2 f8 58 f9 5b b8 48 cd fe 5c 4f 16 29 fe |Y...X.[.H..\O.).|
+| 1e 55 23 af c8 11 b0 8d ea 7c 93 90 17 2f fd ac |.U#......|.../..|
+| a2 09 47 46 3f f0 e9 b0 b7 ff 28 4d 68 32 d6 67 |..GF?.....(Mh2.g|
+| 5e 1e 69 a3 93 b8 f5 9d 8b 2f 0b d2 52 43 a6 6f |^.i....../..RC.o|
+| 32 57 65 4d 32 81 df 38 53 85 5d 7e 5d 66 29 ea |2WeM2..8S.]~]f).|
+| b8 dd e4 95 b5 cd b5 56 12 42 cd c4 4e c6 25 38 |.......V.B..N.%8|
+| 44 50 6d ec ce 00 55 18 fe e9 49 64 d4 4e ca 97 |DPm...U...Id.N..|
+| 9c b4 5b c0 73 a8 ab b8 47 c2 00 00 00 05 64 30 |..[.s...G.....d0|
+| 82 05 60 30 82 04 48 a0 03 02 01 02 02 10 40 01 |..`0..H.......@.|
+| 77 21 37 d4 e9 42 b8 ee 76 aa 3c 64 0a b7 30 0d |w!7..B..v.<d..0.|
+| 06 09 2a 86 48 86 f7 0d 01 01 0b 05 00 30 3f 31 |..*.H........0?1|
+| 24 30 22 06 03 55 04 0a 13 1b 44 69 67 69 74 61 |$0"..U....Digita|
+| 6c 20 53 69 67 6e 61 74 75 72 65 20 54 72 75 73 |l Signature Trus|
+| 74 20 43 6f 2e 31 17 30 15 06 03 55 04 03 13 0e |t Co.1.0...U....|
+| 44 53 54 20 52 6f 6f 74 20 43 41 20 58 33 30 1e |DST Root CA X30.|
+| 17 0d 32 31 30 31 32 30 31 39 31 34 30 33 5a 17 |..210120191403Z.|
+| 0d 32 34 30 39 33 30 31 38 31 34 30 33 5a 30 4f |.240930181403Z0O|
+| 31 0b 30 09 06 03 55 04 06 13 02 55 53 31 29 30 |1.0...U....US1)0|
+| 27 06 03 55 04 0a 13 20 49 6e 74 65 72 6e 65 74 |'..U... Internet|
+| 20 53 65 63 75 72 69 74 79 20 52 65 73 65 61 72 | Security Resear|
+| 63 68 20 47 72 6f 75 70 31 15 30 13 06 03 55 04 |ch Group1.0...U.|
+| 03 13 0c 49 53 52 47 20 52 6f 6f 74 20 58 31 30 |...ISRG Root X10|
+| 82 02 22 30 0d 06 09 2a 86 48 86 f7 0d 01 01 01 |.."0...*.H......|
+| 05 00 03 82 02 0f 00 30 82 02 0a 02 82 02 01 00 |.......0........|
+| ad e8 24 73 f4 14 37 f3 9b 9e 2b 57 28 1c 87 be |..$s..7...+W(...|
+| dc b7 df 38 90 8c 6e 3c e6 57 a0 78 f7 75 c2 a2 |...8..n<.W.x.u..|
+| fe f5 6a 6e f6 00 4f 28 db de 68 86 6c 44 93 b6 |..jn..O(..h.lD..|
+| b1 63 fd 14 12 6b bf 1f d2 ea 31 9b 21 7e d1 33 |.c...k....1.!~.3|
+| 3c ba 48 f5 dd 79 df b3 b8 ff 12 f1 21 9a 4b c1 |<.H..y......!.K.|
+| 8a 86 71 69 4a 66 66 6c 8f 7e 3c 70 bf ad 29 22 |..qiJffl.~<p..)"|
+| 06 f3 e4 c0 e6 80 ae e2 4b 8f b7 99 7e 94 03 9f |........K...~...|
+| d3 47 97 7c 99 48 23 53 e8 38 ae 4f 0a 6f 83 2e |.G.|.H#S.8.O.o..|
+| d1 49 57 8c 80 74 b6 da 2f d0 38 8d 7b 03 70 21 |.IW..t../.8.{.p!|
+| 1b 75 f2 30 3c fa 8f ae dd da 63 ab eb 16 4f c2 |.u.0<.....c...O.|
+| 8e 11 4b 7e cf 0b e8 ff b5 77 2e f4 b2 7b 4a e0 |..K~.....w...{J.|
+| 4c 12 25 0c 70 8d 03 29 a0 e1 53 24 ec 13 d9 ee |L.%.p..)..S$....|
+| 19 bf 10 b3 4a 8c 3f 89 a3 61 51 de ac 87 07 94 |....J.?..aQ.....|
+| f4 63 71 ec 2e e2 6f 5b 98 81 e1 89 5c 34 79 6c |.cq...o[....\4yl|
+| 76 ef 3b 90 62 79 e6 db a4 9a 2f 26 c5 d0 10 e1 |v.;.by..../&....|
+| 0e de d9 10 8e 16 fb b7 f7 a8 f7 c7 e5 02 07 98 |................|
+| 8f 36 08 95 e7 e2 37 96 0d 36 75 9e fb 0e 72 b1 |.6....7..6u...r.|
+| 1d 9b bc 03 f9 49 05 d8 81 dd 05 b4 2a d6 41 e9 |.....I......*.A.|
+| ac 01 76 95 0a 0f d8 df d5 bd 12 1f 35 2f 28 17 |..v.........5/(.|
+| 6c d2 98 c1 a8 09 64 77 6e 47 37 ba ce ac 59 5e |l.....dwnG7...Y^|
+| 68 9d 7f 72 d6 89 c5 06 41 29 3e 59 3e dd 26 f5 |h..r....A)>Y>.&.|
+| 24 c9 11 a7 5a a3 4c 40 1f 46 a1 99 b5 a7 3a 51 |$...Z.L@.F....:Q|
+| 6e 86 3b 9e 7d 72 a7 12 05 78 59 ed 3e 51 78 15 |n.;.}r...xY.>Qx.|
+| 0b 03 8f 8d d0 2f 05 b2 3e 7b 4a 1c 4b 73 05 12 |...../..>{J.Ks..|
+| fc c6 ea e0 50 13 7c 43 93 74 b3 ca 74 e7 8e 1f |....P.|C.t..t...|
+| 01 08 d0 30 d4 5b 71 36 b4 07 ba c1 30 30 5c 48 |...0.[q6....00\H|
+| b7 82 3b 98 a6 7d 60 8a a2 a3 29 82 cc ba bd 83 |..;..}`...).....|
+| 04 1b a2 83 03 41 a1 d6 05 f1 1b c2 b6 f0 a8 7c |.....A.........||
+| 86 3b 46 a8 48 2a 88 dc 76 9a 76 bf 1f 6a a5 3d |.;F.H*..v.v..j.=|
+| 19 8f eb 38 f3 64 de c8 2b 0d 0a 28 ff f7 db e2 |...8.d..+..(....|
+| 15 42 d4 22 d0 27 5d e1 79 fe 18 e7 70 88 ad 4e |.B.".'].y...p..N|
+| e6 d9 8b 3a c6 dd 27 51 6e ff bc 64 f5 33 43 4f |...:..'Qn..d.3CO|
+| 02 03 01 00 01 a3 82 01 46 30 82 01 42 30 0f 06 |........F0..B0..|
+| 03 55 1d 13 01 01 ff 04 05 30 03 01 01 ff 30 0e |.U.......0....0.|
+| 06 03 55 1d 0f 01 01 ff 04 04 03 02 01 06 30 4b |..U...........0K|
+| 06 08 2b 06 01 05 05 07 01 01 04 3f 30 3d 30 3b |..+........?0=0;|
+| 06 08 2b 06 01 05 05 07 30 02 86 2f 68 74 74 70 |..+.....0../http|
+| 3a 2f 2f 61 70 70 73 2e 69 64 65 6e 74 72 75 73 |://apps.identrus|
+| 74 2e 63 6f 6d 2f 72 6f 6f 74 73 2f 64 73 74 72 |t.com/roots/dstr|
+| 6f 6f 74 63 61 78 33 2e 70 37 63 30 1f 06 03 55 |ootcax3.p7c0...U|
+| 1d 23 04 18 30 16 80 14 c4 a7 b1 a4 7b 2c 71 fa |.#..0.......{,q.|
+| db e1 4b 90 75 ff c4 15 60 85 89 10 30 54 06 03 |..K.u...`...0T..|
+| 55 1d 20 04 4d 30 4b 30 08 06 06 67 81 0c 01 02 |U. .M0K0...g....|
+| 01 30 3f 06 0b 2b 06 01 04 01 82 df 13 01 01 01 |.0?..+..........|
+| 30 30 30 2e 06 08 2b 06 01 05 05 07 02 01 16 22 |000...+........"|
+| 68 74 74 70 3a 2f 2f 63 70 73 2e 72 6f 6f 74 2d |http://cps.root-|
+| 78 31 2e 6c 65 74 73 65 6e 63 72 79 70 74 2e 6f |x1.letsencrypt.o|
+| 72 67 30 3c 06 03 55 1d 1f 04 35 30 33 30 31 a0 |rg0<..U...50301.|
+| 2f a0 2d 86 2b 68 74 74 70 3a 2f 2f 63 72 6c 2e |/.-.+http://crl.|
+| 69 64 65 6e 74 72 75 73 74 2e 63 6f 6d 2f 44 53 |identrust.com/DS|
+| 54 52 4f 4f 54 43 41 58 33 43 52 4c 2e 63 72 6c |TROOTCAX3CRL.crl|
+| 30 1d 06 03 55 1d 0e 04 16 04 14 79 b4 59 e6 7b |0...U......y.Y.{|
+| b6 e5 e4 01 73 80 08 88 c8 1a 58 f6 e9 9b 6e 30 |....s.....X...n0|
+| 0d 06 09 2a 86 48 86 f7 0d 01 01 0b 05 00 03 82 |...*.H..........|
+| 01 01 00 0a 73 00 6c 96 6e ff 0e 52 d0 ae dd 8c |....s.l.n..R....|
+| e7 5a 06 ad 2f a8 e3 8f bf c9 0a 03 15 50 c2 e5 |.Z../........P..|
+| 6c 42 bb 6f 9b f4 b4 4f c2 44 88 08 75 cc eb 07 |lB.o...O.D..u...|
+| 9b 14 62 6e 78 de ec 27 ba 39 5c f5 a2 a1 6e 56 |..bnx..'.9\...nV|
+| 94 70 10 53 b1 bb e4 af d0 a2 c3 2b 01 d4 96 f4 |.p.S.......+....|
+| c5 20 35 33 f9 d8 61 36 e0 71 8d b4 b8 b5 aa 82 |. 53..a6.q......|
+| 45 95 c0 f2 a9 23 28 e7 d6 a1 cb 67 08 da a0 43 |E....#(....g...C|
+| 2c aa 1b 93 1f c9 de f5 ab 69 5d 13 f5 5b 86 58 |,........i]..[.X|
+| 22 ca 4d 55 e4 70 67 6d c2 57 c5 46 39 41 cf 8a |".MU.pgm.W.F9A..|
+| 58 83 58 6d 99 fe 57 e8 36 0e f0 0e 23 aa fd 88 |X.Xm..W.6...#...|
+| 97 d0 e3 5c 0e 94 49 b5 b5 17 35 d2 2e bf 4e 85 |...\..I...5...N.|
+| ef 18 e0 85 92 eb 06 3b 6c 29 23 09 60 dc 45 02 |.......;l)#.`.E.|
+| 4c 12 18 3b e9 fb 0e de dc 44 f8 58 98 ae ea bd |L..;.....D.X....|
+| 45 45 a1 88 5d 66 ca fe 10 e9 6f 82 c8 11 42 0d |EE..]f....o...B.|
+| fb e9 ec e3 86 00 de 9d 10 e3 38 fa a4 7d b1 d8 |..........8..}..|
+| e8 49 82 84 06 9b 2b e8 6b 4f 01 0c 38 77 2e f9 |.I....+.kO..8w..|
+| dd e7 39 00 00 16                               |..9...          |
+tls_save_decrypted_record found 0 padding bytes
+dissect_ssl3_handshake iteration 1 type 11 offset 0 length 4033 bytes
+Certificate.KeyID[20]:
+| 4a 08 03 2a c9 a9 af 01 9e b5 8e 9e 9d 35 9d 46 |J..*.........5.F|
+| cf b1 cd a5                                     |....            |
+  record: offset = 4233, reported_length_remaining = 360
+dissect_ssl3_record: content_type 23 Application Data
+decrypt_ssl3_record: app_data len 281, ssl state 0x97
+packet_from_server: is from server - TRUE
+decrypt_ssl3_record: using server decoder
+ssl_decrypt_record ciphertext len 281
+Ciphertext[281]:
+| 91 7c 12 9e 8c e7 81 b7 bc e6 77 57 41 df e5 cc |.|........wWA...|
+| 98 ee 49 3a ac 2d 08 1c 92 01 3c b6 98 14 36 17 |..I:.-....<...6.|
+| 9f 4a 76 b3 06 dd 07 d3 4c ca 2a 67 c2 81 50 b8 |.Jv.....L.*g..P.|
+| c8 49 56 65 f2 a9 29 26 2c 07 47 b9 62 72 ea ef |.IVe..)&,.G.br..|
+| c1 7c e5 f7 84 55 7f a5 1c 70 f7 3e 42 34 b2 d4 |.|...U...p.>B4..|
+| 55 57 a1 81 d5 85 3a 76 12 cf 87 bd d8 fb 5c 62 |UW....:v......\b|
+| 13 d6 d5 cf f1 ec 24 fc bb e8 ce 09 0b b3 01 a5 |......$.........|
+| ed b0 f3 72 a1 c6 af 31 db 84 16 98 f3 71 1c 87 |...r...1.....q..|
+| cf b6 8b e6 c1 cd 86 5e 41 77 97 c8 6f 24 db e3 |.......^Aw..o$..|
+| 5d 88 de 54 30 8e 68 18 ff a6 91 88 78 2c 6f 5e |]..T0.h.....x,o^|
+| 38 d1 c2 d9 15 05 77 ce 92 54 fb a2 48 22 40 70 |8.....w..T..H"@p|
+| c8 47 9d 7a 45 d1 85 33 5b 26 ad 0e be fd 99 ea |.G.zE..3[&......|
+| ed eb 4e b7 eb 97 b5 fb e0 8d 8d 3c c5 45 94 80 |..N........<.E..|
+| 6c 6e c2 97 a9 b4 4f b6 1e 37 d3 d7 08 51 25 ca |ln....O..7...Q%.|
+| c5 4c e8 71 1e 29 9d f2 3f 43 ee 25 e1 e9 5b 37 |.L.q.)..?C.%..[7|
+| 48 c9 8f 64 66 0f c7 7c ed 1d 95 a1 f7 45 e6 40 |H..df..|.....E.@|
+| 4d 1d 3f 42 bf f7 d9 64 93 52 9f 80 0d 77 d8 6d |M.?B...d.R...w.m|
+| 10 31 1e 5b e2 b5 20 cc 6f                      |.1.[.. .o       |
+tls_decrypt_aead_record seq 2
+nonce[12]:
+| de 1e 5b 12 14 85 49 2e 4a 3a e6 8c             |..[...I.J:..    |
+AAD[5]:
+| 17 03 03 01 19                                  |.....           |
+auth_tag(OK)[16]:
+| 52 9f 80 0d 77 d8 6d 10 31 1e 5b e2 b5 20 cc 6f |R...w.m.1.[.. .o|
+Plaintext[265]:
+| 0f 00 01 04 08 04 01 00 54 f3 95 99 ab 0a 3c 7a |........T.....<z|
+| 72 0c a5 41 46 fe 4e c5 0f be 4e f5 fb 5a 44 63 |r..AF.N...N..ZDc|
+| 68 4b 0a b6 6f 81 cd d5 a2 46 69 34 ad a6 96 06 |hK..o....Fi4....|
+| 4e 54 5b 3d 88 ee a9 1b c7 36 e2 5f f6 04 0c ad |NT[=.....6._....|
+| ce 12 4a 2e 50 be e9 74 b9 88 c2 24 02 fb bc b3 |..J.P..t...$....|
+| 8c ab 52 e1 58 e4 10 d1 c7 ee 64 42 4d 01 d5 05 |..R.X.....dBM...|
+| 62 cd 5d 40 3a 3d 22 55 ec 0a 64 68 34 35 ad 40 |b.]@:="U..dh45.@|
+| 45 e0 f6 b2 56 15 93 76 1d d6 aa f1 78 b1 db db |E...V..v....x...|
+| 48 a0 33 dc 9c 23 46 64 8a 59 11 a5 72 c1 f5 92 |H.3..#Fd.Y..r...|
+| 1a 12 ae 7f ac 2e 98 ad e7 b0 9e 17 1c 06 f7 9a |................|
+| 9b cc ab f6 f3 a5 37 97 01 6b 8d 89 b7 82 58 f3 |......7..k....X.|
+| 86 b8 79 41 8b cb 1c cf 13 75 a3 18 cc 47 82 a4 |..yA.....u...G..|
+| 45 45 d1 f2 16 fe 86 c5 09 95 67 da 47 b5 3a 9c |EE........g.G.:.|
+| 58 f3 a5 42 30 dc 25 4b 0a af 7c 71 88 4b d9 6d |X..B0.%K..|q.K.m|
+| 6f 2a b2 9d 5d 49 c8 a0 d5 87 59 81 45 b6 72 12 |o*..]I....Y.E.r.|
+| 52 c3 35 17 27 84 22 6c 20 25 ab 73 05 3a 06 6a |R.5.'."l %.s.:.j|
+| ad 04 ef 9d 1f 49 a2 fa 16                      |.....I...       |
+tls_save_decrypted_record found 0 padding bytes
+dissect_ssl3_handshake iteration 1 type 15 offset 0 length 260 bytes
+  record: offset = 4519, reported_length_remaining = 74
+dissect_ssl3_record: content_type 23 Application Data
+decrypt_ssl3_record: app_data len 69, ssl state 0x97
+packet_from_server: is from server - TRUE
+decrypt_ssl3_record: using server decoder
+ssl_decrypt_record ciphertext len 69
+Ciphertext[69]:
+| f3 49 c3 2b 71 fb 9c d2 8d d6 4b c1 de ba e9 d3 |.I.+q.....K.....|
+| e8 ea 74 1f 14 6b 16 f6 51 01 d0 28 b9 c6 60 d6 |..t..k..Q..(..`.|
+| 63 31 c6 ac 69 01 e4 39 09 4e 92 f7 7a f5 36 85 |c1..i..9.N..z.6.|
+| 00 fc 85 31 35 f6 d1 e3 a7 56 de 71 59 64 3a 48 |...15....V.qYd:H|
+| cf fe 1a 62 cc                                  |...b.           |
+tls_decrypt_aead_record seq 3
+nonce[12]:
+| de 1e 5b 12 14 85 49 2e 4a 3a e6 8d             |..[...I.J:..    |
+AAD[5]:
+| 17 03 03 00 45                                  |....E           |
+auth_tag(OK)[16]:
+| f6 d1 e3 a7 56 de 71 59 64 3a 48 cf fe 1a 62 cc |....V.qYd:H...b.|
+Plaintext[53]:
+| 14 00 00 30 76 f8 f2 83 88 cf 70 22 d9 b1 f7 18 |...0v.....p"....|
+| 68 81 c4 96 f1 75 c3 5f 29 8f 8b f9 4d 3e ef 30 |h....u._)...M>.0|
+| f4 6e ec f7 49 15 2b d0 e5 4f 09 b8 11 ea f5 57 |.n..I.+..O.....W|
+| 2a 75 16 89 16                                  |*u...           |
+tls_save_decrypted_record found 0 padding bytes
+dissect_ssl3_handshake iteration 1 type 20 offset 0 length 48 bytes
+trying to use TLS keylog in B:\schoolwork\crypto\excercise\wireshark\authenticate handshake\secret.txt
+tls13_load_secret transitioning to new key, old state 0x97
+tls13_load_secret Retrieved TLS 1.3 traffic secret.
+Client Random[32]:
+| d8 c7 c7 9e 62 89 2b d0 9b af e0 63 b1 f9 48 88 |....b.+....c..H.|
+| 08 55 58 9e f1 3e b8 47 ca 27 e8 43 6a a6 ad 80 |.UX..>.G.'.Cj...|
+SERVER_TRAFFIC_SECRET_0[48]:
+| c8 7f b7 d3 05 4e 1f 66 35 f2 fc 1c b1 d0 a6 dd |.....N.f5.......|
+| 2a 42 bb ff 85 1d 88 90 ae 79 fe 3c f9 be 09 a8 |*B.......y.<....|
+| bd a8 f1 ac b3 ac 6c 58 f0 33 90 64 a5 2f 9c 51 |......lX.3.d./.Q|
+tls13_generate_keys CIPHER: AES256
+tls13_generate_keys key_length 32 iv_length 12
+Server Write Key[32]:
+| 13 8a 5c e3 fe b7 b2 35 78 c8 6e 1c 7c f2 a7 5c |..\....5x.n.|..\|
+| 10 1c 2f 61 b5 31 f1 7a bb 94 82 f7 d3 6c 73 96 |../a.1.z.....ls.|
+Server Write IV[12]:
+| eb 41 7c 6e 88 82 c3 97 71 a4 81 b0             |.A|n....q...    |
+tls13_generate_keys ssl_create_decoder(server)
+decoder initialized (digest len 48)
+tls13_generate_keys Server ready using cipher suite 0x1302 (cipher AES256 hash SHA384)
+
+dissect_ssl enter frame #8 (already visited)
+packet_from_server: is from server - FALSE
+  conversation = 0000022DE9E6FEE0, ssl_session = 0000000000000000
+  record: offset = 0, reported_length_remaining = 517
+dissect_ssl3_record: content_type 22 Handshake
+dissect_ssl3_handshake iteration 1 type 1 offset 5 length 508 bytes
+
+dissect_ssl enter frame #10 (already visited)
+packet_from_server: is from server - TRUE
+  conversation = 0000022DE9E6FEE0, ssl_session = 0000000000000000
+  record: offset = 0, reported_length_remaining = 4593
+dissect_ssl3_record: content_type 22 Handshake
+dissect_ssl3_handshake iteration 1 type 2 offset 5 length 118 bytes
+  record: offset = 127, reported_length_remaining = 4466
+dissect_ssl3_record: content_type 20 Change Cipher Spec
+  record: offset = 133, reported_length_remaining = 4460
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 8 offset 0 length 15 bytes
+ssl_dissect_hnd_hello_ext_alpn: changing handle 0000022DE826D630 to 0000022DE826D630 (http2)  record: offset = 174, reported_length_remaining = 4419
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 11 offset 0 length 4033 bytes
+  record: offset = 4233, reported_length_remaining = 360
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 15 offset 0 length 260 bytes
+  record: offset = 4519, reported_length_remaining = 74
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 20 offset 0 length 48 bytes
+
+dissect_ssl enter frame #8 (already visited)
+packet_from_server: is from server - FALSE
+  conversation = 0000022DE9E6FEE0, ssl_session = 0000000000000000
+  record: offset = 0, reported_length_remaining = 517
+dissect_ssl3_record: content_type 22 Handshake
+dissect_ssl3_handshake iteration 1 type 1 offset 5 length 508 bytes
+
+dissect_ssl enter frame #10 (already visited)
+packet_from_server: is from server - TRUE
+  conversation = 0000022DE9E6FEE0, ssl_session = 0000000000000000
+  record: offset = 0, reported_length_remaining = 4593
+dissect_ssl3_record: content_type 22 Handshake
+dissect_ssl3_handshake iteration 1 type 2 offset 5 length 118 bytes
+  record: offset = 127, reported_length_remaining = 4466
+dissect_ssl3_record: content_type 20 Change Cipher Spec
+  record: offset = 133, reported_length_remaining = 4460
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 8 offset 0 length 15 bytes
+ssl_dissect_hnd_hello_ext_alpn: changing handle 0000022DE826D630 to 0000022DE826D630 (http2)  record: offset = 174, reported_length_remaining = 4419
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 11 offset 0 length 4033 bytes
+  record: offset = 4233, reported_length_remaining = 360
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 15 offset 0 length 260 bytes
+  record: offset = 4519, reported_length_remaining = 74
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 20 offset 0 length 48 bytes
+
+dissect_ssl enter frame #8 (already visited)
+packet_from_server: is from server - FALSE
+  conversation = 0000022DE9E6FEE0, ssl_session = 0000000000000000
+  record: offset = 0, reported_length_remaining = 517
+dissect_ssl3_record: content_type 22 Handshake
+dissect_ssl3_handshake iteration 1 type 1 offset 5 length 508 bytes
+
+dissect_ssl enter frame #10 (already visited)
+packet_from_server: is from server - TRUE
+  conversation = 0000022DE9E6FEE0, ssl_session = 0000000000000000
+  record: offset = 0, reported_length_remaining = 4593
+dissect_ssl3_record: content_type 22 Handshake
+dissect_ssl3_handshake iteration 1 type 2 offset 5 length 118 bytes
+  record: offset = 127, reported_length_remaining = 4466
+dissect_ssl3_record: content_type 20 Change Cipher Spec
+  record: offset = 133, reported_length_remaining = 4460
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 8 offset 0 length 15 bytes
+ssl_dissect_hnd_hello_ext_alpn: changing handle 0000022DE826D630 to 0000022DE826D630 (http2)  record: offset = 174, reported_length_remaining = 4419
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 11 offset 0 length 4033 bytes
+  record: offset = 4233, reported_length_remaining = 360
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 15 offset 0 length 260 bytes
+  record: offset = 4519, reported_length_remaining = 74
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 20 offset 0 length 48 bytes
+
+dissect_ssl enter frame #10 (already visited)
+packet_from_server: is from server - TRUE
+  conversation = 0000022DE9E6FEE0, ssl_session = 0000000000000000
+  record: offset = 0, reported_length_remaining = 4593
+dissect_ssl3_record: content_type 22 Handshake
+dissect_ssl3_handshake iteration 1 type 2 offset 5 length 118 bytes
+  record: offset = 127, reported_length_remaining = 4466
+dissect_ssl3_record: content_type 20 Change Cipher Spec
+  record: offset = 133, reported_length_remaining = 4460
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 8 offset 0 length 15 bytes
+ssl_dissect_hnd_hello_ext_alpn: changing handle 0000022DE826D630 to 0000022DE826D630 (http2)  record: offset = 174, reported_length_remaining = 4419
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 11 offset 0 length 4033 bytes
+  record: offset = 4233, reported_length_remaining = 360
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 15 offset 0 length 260 bytes
+  record: offset = 4519, reported_length_remaining = 74
+dissect_ssl3_record: content_type 23 Application Data
+dissect_ssl3_handshake iteration 1 type 20 offset 0 length 48 bytes

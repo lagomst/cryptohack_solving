@@ -58,6 +58,35 @@ def json_recv(r, timeout: float = 5.0) -> Optional[dict]:
             eprint("Error while receiving:", exc)
         return None
 
+def stream_json_recv(r, timeout: float = 5.0) -> Optional[dict]:
+    try:
+        raw = r.recvline(timeout=timeout)
+        if not raw:
+            eprint("recvline returned empty/None (no data).")
+            return None
+        if isinstance(raw, bytes):
+            raw = raw.decode(errors="replace")
+        raw = raw.strip()
+        if not raw:
+            eprint("Received line is empty after stripping.")
+            return None
+        raw = raw[raw.find('{'):]
+        return json.load(raw)
+        
+    except json.JSONDecodeError:
+        eprint("Received non-JSON / malformed JSON:", repr(raw))
+        return None
+    except Exception as exc:
+        # pwntools raises various exception types depending on situation/version.
+        # Handle common cases by message content (robust across versions).
+        msg = str(exc).lower()
+        if "timed out" in msg or "timeout" in msg:
+            eprint(f"Timed out after {timeout} seconds waiting for a reply.")
+        elif "eof" in msg or "closed" in msg:
+            eprint("Connection closed by remote while waiting for a reply.")
+        else:
+            eprint("Error while receiving:", exc)
+        return None
 
 def read_banner_lines(r, count: int = 4, timeout: float = 0.8) -> None:
     for _ in range(count):

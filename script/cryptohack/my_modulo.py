@@ -1,7 +1,6 @@
 import base64
 import math
 import random
-from primePy import primes
 from pprint import pprint
 
 def naive_order(p:int, a: int):
@@ -221,7 +220,7 @@ def get_prime_factor(n: int) -> dict[int, int]:
             if temp < (2 << 32):
                 factor = smallest_prime_factor(temp)
             else:
-                factor = polland_factor(temp)
+                factor = pollard_rho_factor(temp)
             if not factor:
                 pprint("Retrying the function...!")
             else:
@@ -292,12 +291,12 @@ def is_prime_miller_rabin(n, rounds:int=500):
         s += 1
     d = temp
     # print(f"{n-1=} {d=} {s=}" )
-    # Hybrid approrach with some deterministic bases for number < 2^64 bits
+    # Hybrid approach with some deterministic bases for number < 2^64 bits
     bases = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 44] 
     num_bases_to_generate = rounds - len(bases)
     for _ in range(num_bases_to_generate):
         # Append random bases into base
-        random_base = random.randint(2, n -2)
+        random_base = random.randint(2, n-2)
         if random_base not in bases:
             bases.append(random_base)
     
@@ -319,37 +318,42 @@ def is_prime(n: int):
         return is_prime_miller_rabin(n)
     return is_prime_naive(n)
 
-def polland_factor(n :int):    
+def pollard_rho_factor(n :int):    
     b = random.randint(2, n-2)
-    pprint("Polland Rho algo!")
-    pprint(f"{n=}\t{b=}")
+    print("Pollard Rho algo!")
+    print(f"{n=}\t{b=}")
     
     def g(a: int):
         return (a * a + b) % n
-    
+            
     d = 1
     steps = 100
-    max_outer_loop = 1000000
+    max_outer_loop = 1_000_000
     found_d = False
+    
+    last_x = x = random.randint(2, n-2)
+    last_y = y = x
+    
     for loop in range(max_outer_loop):
         if (d != 1):
             found_d = True
             break
         product = 1
         steps_failed = False
+        
         for i in range(steps):
             x = g(x) # turtle
             y = g(g(y)) # hare
             if x == y:
                 # Algo failed, fall back to step = 1
-                pprint(f"Multiple step failed at {i}! Reverting to step 1!")
+                print(f"Multiple step failed at {i}! Reverting to step 1!")
                 steps_failed = True
                 break
             product = (product * abs(x - y)) % n
         
         # Termination condition
         if steps_failed and steps == 1:
-            pprint("x and y converge!")
+            print("x and y converge!")
             return None
         
         # Set step to 1
@@ -366,12 +370,12 @@ def polland_factor(n :int):
         d = gcd_euclid(product, n)
     
     if d == n:
-        pprint("d meets n!")
+        print("d meets n!")
         return None
     if not found_d:
-        pprint("Maximum global step reached!")
+        print("Maximum global step reached!")
         return None
-    pprint(f"Found {d=}")
+    print(f"Found {d=}")
     return d
 
 def brent(f, x0) -> tuple[int, int]:
@@ -417,12 +421,47 @@ def matrix2bytes(matrix):
     
     return bytes
 
+def binomial_solver(N:int, e1:int, e2:int, c1:int, c2:int, c1_weights:tuple[int,int], c2_weights:tuple[int,int]):
+    # Solving two equation of the form:
+    # c1 = (a1*p + b1*q)^e1 = (a1*p)^e1 + (b1*q)^e1 (mod N=p*q)
+    # c2 = (a2*p + b2*q)^e2 = (a2*p)^e2 + (b2*q)^e2 (mod N=p*q)
+    
+    # First raise them to the same power
+    c1_pow_e2 = pow(c1, e2, N) # c1 = (a1*p)^e12 + (b1*q)^e12 (e12 = e1 * e2)
+    c2_pow_e1 = pow(c2, e1, N)
+    
+    # We want to isolate q, ie figure how to cancel p
+    # So we need to make p of two equations have the same weight
+    a1, b1 = c1_weights
+    a2, b2 = c2_weights
+    L1 = (c1_pow_e2 * pow(a1, -e1*e2, N) )%N # c1 = p^e12 + Const1 * q^e12 
+    L2 = (c2_pow_e1 * pow(a2, -e1*e2, N) )%N # c2 = p^e12 + Const2 * q^e12
+
+    Q = (L2 - L1)%N # Q = (Const2 - Const1) * q^e12
+    # Const1 = a1^-e12 * b1^e12, Const2 = a2^e-12 * b2^e12
+    const1 = (pow(a1, -e1*e2, N) * pow(b1, e1*e2, N))%N
+    const2 = (pow(a2, -e1*e2, N) * pow(b2, e1*e2, N))%N
+    X = (Q * pow(const2-const1, -1, N))%N # X = q^e12
+    # X here is a multiple of q, N is also a multiple of q (N = pq)
+    # AND p and q are primes
+    # so gcd(X, N) = q (since N only has q^1, we can ensure that the output will always be q^1) 
+    q = gcd_euclid(N, X)
+    assert N % q == 0 and q != 1
+    p = N // q
+    return p, q
+
 def main():
-    hex_str = "72bca9b68fc16ac7beeb8f849dca1d8a783e8acf9679bf9269f7bf"
-    hex_bytes = bytes.fromhex(hex_str)
-    key = base64.b64encode(hex_bytes)
-    print(key)
+    N  = 14905562257842714057932724129575002825405393502650869767115942606408600343380327866258982402447992564988466588305174271674657844352454543958847568190372446723549627752274442789184236490768272313187410077124234699854724907039770193680822495470532218905083459730998003622926152590597710213127952141056029516116785229504645179830037937222022291571738973603920664929150436463632305664687903244972880062028301085749434688159905768052041207513149370212313943117665914802379158613359049957688563885391972151218676545972118494969247440489763431359679770422939441710783575668679693678435669541781490217731619224470152467768073
+    e1 = 12886657667389660800780796462970504910193928992888518978200029826975978624718627799215564700096007849924866627154987365059524315097631111242449314835868137
+    e2 = 12110586673991788415780355139635579057920926864887110308343229256046868242179445444897790171351302575188607117081580121488253540215781625598048021161675697
+    c1 = 14010729418703228234352465883041270611113735889838753433295478495763409056136734155612156934673988344882629541204985909650433819205298939877837314145082403528055884752079219150739849992921393509593620449489882380176216648401057401569934043087087362272303101549800941212057354903559653373299153430753882035233354304783275982332995766778499425529570008008029401325668301144188970480975565215953953985078281395545902102245755862663621187438677596628109967066418993851632543137353041712721919291521767262678140115188735994447949166616101182806820741928292882642234238450207472914232596747755261325098225968268926580993051
+    c2 = 14386997138637978860748278986945098648507142864584111124202580365103793165811666987664851210230009375267398957979494066880296418013345006977654742303441030008490816239306394492168516278328851513359596253775965916326353050138738183351643338294802012193721879700283088378587949921991198231956871429805847767716137817313612304833733918657887480468724409753522369325138502059408241232155633806496752350562284794715321835226991147547651155287812485862794935695241612676255374480132722940682140395725089329445356434489384831036205387293760789976615210310436732813848937666608611803196199865435145094486231635966885932646519
+    
+    c1_weights = (2, 3)
+    c2_weights = (5, 7)
+    
+    return binomial_solver(N, e1, e2, c1, c2, c1_weights, c2_weights)
 
 if __name__ == "__main__":
-    print(main())
+    pprint(main())
     

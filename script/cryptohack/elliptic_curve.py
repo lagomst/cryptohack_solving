@@ -9,7 +9,7 @@ from numpy.polynomial import Polynomial
 from Crypto.Util import number
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Cipher import AES
-from sage.all import EllipticCurve, GF
+from sage.all import EllipticCurve, GF, discrete_log, gcd
 import utils.socket_json_client as sjc
 import json
 
@@ -583,6 +583,7 @@ def tate_pairing(P: PointEC, Q:PointEC, r:int):
 # Main implementation here
 def attack_baby_step_giant_step(g:int|PointEC, a:int|PointEC, p:int, known_order:int=None):
     # assuming p is prime
+    print("Running baby-step-giant-step!")
     print(f"{g=} {a=} {p=}")
     if known_order:
         n = known_order
@@ -600,11 +601,14 @@ def attack_baby_step_giant_step(g:int|PointEC, a:int|PointEC, p:int, known_order
             gj_table[key].append(j)
         else:
             gj_table[key] = [j]
-        gj *= g
+        gj = (gj * g)%p
         if (j % log_step == 0):
             log_str = f"Progress: {j / m * 100:.0f}% ({j}/{m})"
             print(log_str)
     print(f"Lookup table JG constructed, length={len(gj_table)}")
+    # print(gj_table)
+    
+    print("Searching inside lookup table...")
     g_m_neg: int|PointEC = pow(g, -m, p) 
     gamma = a%p # a * (g^-m)^i, i currently i=0
     for i in range(m):
@@ -614,9 +618,7 @@ def attack_baby_step_giant_step(g:int|PointEC, a:int|PointEC, p:int, known_order
             j = gj_table[key][-1]
             print(f"Found matching {gamma=}, {j=} {i=} x={j + m*i}")
             return j + m*i
-        gamma *= g_m_neg
-        if isinstance(gamma, int):
-            gamma %= p
+        gamma = (gamma * g_m_neg)%p
     
     return None
 
@@ -636,6 +638,7 @@ def pohlig_hellman(g:int|PointEC, a:int|PointEC, p:int, known_order:int=None):
         ai = pow(a, n//exp, p)
         xi = attack_baby_step_giant_step(gi, ai, p, exp)
         if xi is None:
+            # something wrong here
             return None
         crt_terms.append((xi, exp))
     print(f"{crt_terms=}")
@@ -895,13 +898,24 @@ def gcd_euclid(big: int, small: int):
     a = big
     b = small
     while (b > 0):
-        q = a // b
+        # q = a // b
         r = a % b
         if r == 0:
             break
         a = b
         b = r 
     return b
+
+def gcd_array(array:list[int]):
+    res = array[0]
+    for num in array[1:]:
+        res = gcd_euclid(num, res)
+
+        # If res becomes 1 at any iteration then it remains 1
+        # So no need to check further
+        if res == 1:
+            return 1
+    return res
 
 def factor_out_two_powers(n : int):
     if n < 0 or not isinstance(n, int):

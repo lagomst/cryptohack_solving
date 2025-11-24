@@ -3,7 +3,6 @@ from Crypto.Util.number import bytes_to_long
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Cipher import AES
 import hashlib
-import primefac
 import numpy as np
 import math
 import json

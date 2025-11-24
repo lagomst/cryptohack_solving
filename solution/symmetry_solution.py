@@ -1,6 +1,10 @@
 # symmetry_crypto.py
 from script.cryptohack.symmetry import *
 from script.cryptohack.my_modulo import get_prime_factor
+from script.cryptohack.elliptic_curve import pohlig_hellman
+import primefac
+import utils.socket_json_client as sjc
+from sage.all import discrete_log, GF
 
 def rsa_signature_example():
     N = 15216583654836731327639981224133918855895948374072384050848479908982286890731769486609085918857664046075375253168955058743185664390273058074450390236774324903305663479046566232967297765731625328029814055635316002591227570271271445226094919864475407884459980489638001092788574811554149774028950310695112688723853763743238753349782508121985338746755237819373178699343135091783992299561827389745132880022259873387524273298850340648779897909381979714026837172003953221052431217940632552930880000919436507245150726543040714721553361063311954285289857582079880295199632757829525723874753306371990452491305564061051059885803
@@ -159,6 +163,151 @@ def deriving_symmetric_key():
     encrypted_flag='39c99bf2f0c14678d6a5416faef954b5893c316fc3c48622ba1fd6a9fe85f3dc72a29c394cf4bc8aff6a7b21cae8e12c'
     
     return decrypt_flag(shared_secret, iv, encrypted_flag)
+
+def parameter_injection():
+    host = "socket.cryptohack.org"
+    port = 13371
+    
+    tube = sjc.remote(host, str(port))
+    print(f"Connecting to {host}:{port} ...")
+    
+    # sjc.read_banner_lines(tube, 1)
+    
+    # Alice keys
+    s = tube.recvline()
+    print(s)
+    s = s.decode()
+    alice_response = eval(s[s.find('{'):])
+    assert isinstance(alice_response, dict)
+    
+    p = int(alice_response["p"], 16)
+    g = int(alice_response["g"], 16)
+    A = int(alice_response["A"], 16)
+    
+    # Here we will pretend to be Alice and generate a small private key in place of her
+    mA = 3 # You can use random values
+    MA = pow(g, mA, p)
+    request = {
+        'p': alice_response["p"],
+        'g': alice_response["g"],
+        'A': hex(MA)
+    }
+    sjc.json_send(tube, request)
+    s = tube.recvline()
+    print(s)
+    
+    s = s.decode()
+    bob_response = eval(s[s.find('{'):])
+    assert isinstance(bob_response, dict)
+
+    # We do the same for Bob
+    B = int(bob_response['B'], 16)
+    mB = 4
+    MB = pow(g, mB, p)
+    request = {
+        'p': alice_response["p"],
+        'g': alice_response["g"],
+        'B': hex(MB)
+    }
+    sjc.json_send(tube, request)
+    s = tube.recvline()
+    print(s)
+    
+    s = s.decode()
+    flag_response = eval(s[s.find('{'):])
+    assert isinstance(flag_response, dict)
+    
+    # Now we've fooled Alice into accepting our public key instead of Bob's, we arrive the same shared_secret with Alice
+    iv = flag_response["iv"]
+    encrypted_flag = flag_response["encrypted_flag"]
+    
+    shared_secret = pow(A, mB, p)
+    flag = decrypt_flag(shared_secret, iv, encrypted_flag)
+    
+    tube.close()
+    return flag
+
+
+def export_grade():
+    host = "socket.cryptohack.org"
+    port = 13379
+    
+    tube = sjc.remote(host, str(port))
+    print(f"Connecting to {host}:{port} ...")
+    
+    # sjc.read_banner_lines(tube, 1)
+    
+    def send(r, req:dict):
+        try:
+            sjc.json_send(r, req)
+        except Exception as e:
+            return f"Error: {e}"
+        return "Ok"
+    
+    def recv(r):
+        s = r.recvline()
+        print(s)
+        
+        s = s.decode()
+        response = eval(s[s.find('{'):])
+        assert isinstance(response, dict)
+        return response
+    
+    # Alice keys
+    alice_response = recv(tube)
+    supported_format = alice_response["supported"][-1] # Here we will choose DH64 for the easiest format to attack
+    # Now we send it to Bob
+    request = {
+        'supported': [supported_format],
+    }
+    send(tube, request)
+    bob_response = recv(tube)
+    # Reply to Alice
+    request = {
+        'chosen': supported_format 
+    }
+    send(tube, request)
+    alice_response = recv(tube)
+    
+    p = int(alice_response["p"], 16)
+    g = int(alice_response["g"], 16)
+    A = int(alice_response["A"], 16)
+
+    # We can find Alice private keys by a DLP algorithm
+    # Since the search space is 2^32 in average
+    # While we no longer can pretend as Bob,
+    # We can still derive their private key from unsafe protocol
+    a = pohlig_hellman(g, A, p)
+    assert a is not None
+    # Send to Bob
+    request = {
+        'p': hex(p),
+        'g': hex(g),
+        'A': hex(A)
+    }
+    send(tube, request)
+    bob_response = recv(tube)
+    
+    B = int(bob_response["B"], 16)
+    b = pohlig_hellman(g, B, p)
+    assert b is not None
+    # Get flag
+    request = {
+        'p': hex(p),
+        'g': hex(g),
+        'B': hex(B)
+    }
+    send(tube, request)
+    flag_response = recv(tube)
+    
+    iv = flag_response['iv']
+    encrypted_flag = flag_response['encrypted_flag']
+    
+    tube.close()
+    shared_secret = pow(A, b, p)
+    
+    flag = decrypt_flag(shared_secret, iv, encrypted_flag)
+    return flag
 
 def main():
     print("Usage: python -c 'from solution.symmetry_solution import *; print(<function>())'")
