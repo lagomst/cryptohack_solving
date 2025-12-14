@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./script/smc",
+        "./script/smc/burp_ext",
+        "./script/smc"
+    ]
+}
